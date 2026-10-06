@@ -1,520 +1,802 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Black Hole Vacuum</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #050508;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #ffffff;
-        }
-        #canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 16px;
-        }
-        .hud-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .stat-card {
-            background: rgba(15, 15, 25, 0.75);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 16px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        .stat-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #a0a0c0;
-        }
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: #00f0ff;
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-        }
-        .tier-badge {
-            background: linear-gradient(135deg, #7928ca, #ff0080);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 0 15px rgba(255, 0, 128, 0.4);
-        }
-        .hud-bottom {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            pointer-events: auto;
-            margin-bottom: 8px;
-        }
-        .btn {
-            background: rgba(25, 25, 40, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 105px;
-        }
-        .btn:active {
-            transform: scale(0.95);
-        }
-        .btn-sub {
-            font-size: 10px;
-            color: #ffd700;
-            margin-top: 2px;
-        }
-        .btn-ad {
-            background: linear-gradient(135deg, #ff416c, #ff4b2b);
-            border: none;
-            box-shadow: 0 0 15px rgba(255, 65, 108, 0.4);
-        }
-        /* Modal Style */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .modal-card {
-            background: #12121a;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
-            padding: 24px;
-            width: 85%;
-            max-width: 340px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-        }
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #fff;
-        }
-        .modal-desc {
-            font-size: 13px;
-            color: #aaa;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
-        .ad-timer {
-            font-size: 32px;
-            font-weight: 800;
-            color: #ff0080;
-            margin: 15px 0;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Black Hole Vacuum 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: full-bleed canvas stage with a floating HUD; upgrade dock sits right on desktop and below the stage on phones. */
+/* Deliberately single-look: a dark space scene, so every color is set explicitly and does not follow the viewer theme. */
+:root {
+  color-scheme: dark;
+  --void: #06050b;
+  --deep: #0c0a17;
+  --panel: #14112c;
+  --line: #2b2650;
+  --ink: #efeaff;
+  --dim: #9a93bd;
+  --ember: #ff8a3d;
+  --hot: #ffd29a;
+  --violet: #8a6bff;
+  --warn: #ffb27a;
+  --f-display: 'Unbounded', system-ui, sans-serif;
+  --f-data: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--f-data);
+  font-size: 14px;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+
+#app { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+#stage { position: relative; overflow: hidden; background: var(--void); min-height: 0; }
+#c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; -webkit-touch-callout: none; outline-offset: -4px; }
+#c:active { cursor: grabbing; }
+
+.hud {
+  position: absolute; inset: 0 0 auto 0;
+  padding: 14px 16px 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; align-items: start;
+  pointer-events: none;
+}
+.label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.mass { min-width: 0; display: grid; gap: 2px; }
+#massVal { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 7vw, 44px); line-height: 1.05; color: var(--hot); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rate { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 8px; pointer-events: auto; }
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+  background: rgba(20, 17, 44, .8); border: 1px solid var(--line); cursor: pointer;
+}
+.icon-btn:hover { border-color: var(--violet); }
+.icon-btn svg { width: 20px; height: 20px; stroke: var(--ink); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn[aria-pressed="false"] .ic-on, .icon-btn[aria-pressed="true"] .ic-off { display: none; }
+.icon-btn.armed { border-color: var(--ember); background: rgba(255, 138, 61, .18); }
+
+.tier { grid-column: 1 / -1; display: grid; gap: 6px; }
+.tier-row { display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
+#tierName { font-family: var(--f-display); font-weight: 700; font-size: 16px; }
+#floorTxt { color: var(--violet); font-size: 12px; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+#tierBar { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ember), var(--hot)); }
+#nextTxt { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.burst {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+  max-width: calc(100% - 32px); width: max-content;
+  display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px;
+  border-radius: 999px; cursor: pointer; text-align: left;
+  background: linear-gradient(135deg, rgba(255, 138, 61, .22), rgba(138, 107, 255, .22));
+  border: 1px solid var(--ember);
+}
+.burst:hover { background: linear-gradient(135deg, rgba(255, 138, 61, .34), rgba(138, 107, 255, .3)); }
+.burst .b-ic { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--ember); display: grid; place-items: center; }
+.burst .b-ic svg { width: 12px; height: 12px; fill: var(--void); margin-left: 2px; }
+.burst .b-txt { display: grid; gap: 1px; min-width: 0; }
+.b-title { font-family: var(--f-display); font-weight: 500; font-size: 12px; letter-spacing: .02em; }
+.b-sub { font-size: 11px; color: var(--hot); font-variant-numeric: tabular-nums; }
+.burst.active { cursor: default; border-color: #ffd24a; background: rgba(255, 210, 74, .16); animation: glow 1.6s ease-in-out infinite alternate; }
+.burst.active .b-ic { background: #ffd24a; }
+@keyframes glow { from { box-shadow: 0 0 0 rgba(255, 210, 74, 0); } to { box-shadow: 0 0 22px rgba(255, 210, 74, .45); } }
+
+#hint {
+  position: absolute; left: 0; right: 0; bottom: 78px; text-align: center; padding: 0 16px;
+  color: var(--dim); font-size: 13px; pointer-events: none; transition: opacity .6s;
+}
+#hint.gone { opacity: 0; }
+#toast {
+  position: absolute; left: 50%; top: 142px; transform: translate(-50%, -8px); opacity: 0;
+  max-width: calc(100% - 32px); text-align: center; padding: 8px 14px; border-radius: 10px;
+  background: rgba(20, 17, 44, .92); border: 1px solid var(--violet); color: var(--ink); font-size: 13px;
+  pointer-events: none; transition: opacity .25s, transform .25s;
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.bad { border-color: var(--warn); }
+
+#pops { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.pop {
+  position: absolute; font-family: var(--f-data); font-weight: 500; font-size: 14px; white-space: nowrap;
+  color: var(--hot); text-shadow: 0 0 8px rgba(255, 138, 61, .9), 0 1px 2px #000;
+  transform: translate(-50%, -50%); animation: floatUp 1s ease-out forwards; will-change: transform, opacity;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
+  15% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 64px)) scale(1); }
+}
+
+#dock { background: var(--deep); border-top: 1px solid var(--line); padding: 10px 0 12px; display: grid; gap: 8px; min-width: 0; }
+.dock-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 16px; }
+.dock-head h2 { margin: 0; font-family: var(--f-display); font-weight: 500; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.dock-head span { color: var(--dim); font-size: 11px; }
+#upgrades { list-style: none; margin: 0; padding: 2px 16px; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; }
+#upgrades li { flex: none; scroll-snap-align: start; }
+.up {
+  width: 186px; height: 100%; display: grid; gap: 4px; text-align: left; cursor: pointer; align-content: start;
+  padding: 11px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line);
+}
+.up:hover:not(:disabled) { border-color: var(--ember); }
+.up:disabled { opacity: .45; cursor: not-allowed; }
+.up.can { border-color: rgba(255, 138, 61, .55); }
+.up-name { font-family: var(--f-display); font-weight: 500; font-size: 12px; }
+.up-eff { color: var(--dim); font-size: 11.5px; line-height: 1.35; }
+.up-warn { color: var(--warn); font-size: 11px; line-height: 1.3; min-height: 1.4em; }
+.up-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.up-own { color: var(--dim); font-size: 11px; }
+.up-cost { color: var(--hot); font-weight: 500; font-size: 13px; }
+.dock-foot { display: none; margin: 0; padding: 0 16px; color: var(--dim); font-size: 11.5px; line-height: 1.5; }
+
+@media (min-width: 860px) {
+  #app { grid-template-rows: none; grid-template-columns: minmax(0, 1fr) 340px; }
+  #dock { border-top: 0; border-left: 1px solid var(--line); padding: 20px 0; align-content: start; overflow-y: auto; }
+  #upgrades { flex-direction: column; overflow: visible; }
+  #upgrades li { flex: initial; }
+  .up { width: 100%; }
+  .dock-foot { display: block; }
+}
+
+#adModal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(6, 5, 11, .86); }
+.ad-card { width: min(100%, 360px); display: grid; gap: 14px; padding: 22px; border-radius: 16px; background: var(--panel); border: 1px solid var(--violet); text-align: center; }
+.ad-card h3 { margin: 0; font-family: var(--f-display); font-weight: 500; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.ad-card p { margin: 0; color: var(--dim); line-height: 1.5; }
+#adCount { font-family: var(--f-display); font-weight: 700; font-size: 44px; color: var(--hot); font-variant-numeric: tabular-nums; }
+#adBar { display: block; height: 100%; width: 0; background: var(--violet); transition: width 1s linear; }
+.ad-cancel { padding: 10px 14px; border-radius: 10px; background: transparent; border: 1px solid var(--line); cursor: pointer; }
+.ad-cancel:hover { border-color: var(--dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pop { animation-duration: .6s; }
+  .burst.active { animation: none; }
+}
+</style>
 </head>
 <body>
+<div id="app">
+  <main id="stage">
+    <canvas id="c" tabindex="0" aria-label="Black hole. Drag to move it, or use the arrow keys."></canvas>
+    <div id="pops"></div>
 
-    <canvas id="canvas"></canvas>
+    <header class="hud">
+      <div class="mass">
+        <span class="label">Mass</span>
+        <strong id="massVal">0</strong>
+        <span class="rate" id="rate">0/s</span>
+      </div>
+      <div class="tools">
+        <button class="icon-btn" id="sndBtn" type="button" aria-pressed="true" aria-label="Sound">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="ic-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="ic-off" d="M17 9l5 6M22 9l-5 6"/></svg>
+        </button>
+        <button class="icon-btn" id="resetBtn" type="button" aria-label="Reset progress">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9"/><path d="M4 4v5h5"/></svg>
+        </button>
+      </div>
+      <div class="tier">
+        <div class="tier-row"><span class="label">Debris</span><b id="tierName">Dust motes</b><span id="floorTxt"></span></div>
+        <div class="bar"><i id="tierBar"></i></div>
+        <span id="nextTxt"></span>
+      </div>
+    </header>
 
-    <div id="ui-layer">
-        <div class="hud-top">
-            <div class="stat-card">
-                <div class="stat-label">Mass Consumed</div>
-                <div class="stat-value" id="mass-val">0</div>
-            </div>
-            <div class="tier-badge" id="tier-val">Dust Motes</div>
-        </div>
+    <div id="hint">Drag to move the black hole. It eats whatever it catches.</div>
+    <div id="toast" role="status" aria-live="polite"></div>
 
-        <div class="hud-bottom">
-            <button class="btn" id="btn-size">
-                <span>Expand Hole</span>
-                <span class="btn-sub" id="cost-size">10 M</span>
-            </button>
-            <button class="btn" id="btn-pull">
-                <span>Gravity Pull</span>
-                <span class="btn-sub" id="cost-pull">15 M</span>
-            </button>
-            <button class="btn btn-ad" id="btn-ad">
-                <span>Supernova</span>
-                <span class="btn-sub"> Watch Ad </span>
-            </button>
-        </div>
-    </div>
+    <button class="burst" id="burstBtn" type="button">
+      <span class="b-ic" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M0 0l12 6-12 6z"/></svg></span>
+      <span class="b-txt"><span class="b-title">Supernova Burst</span><span class="b-sub" id="burstSub">Watch an ad: reach x2 for 3 min</span></span>
+    </button>
+  </main>
 
-    <!-- Simulated Ad Modal -->
-    <div class="modal-overlay" id="ad-modal">
-        <div class="modal-card">
-            <div class="modal-title">Simulated Rewarded Ad</div>
-            <div class="modal-desc">Triggering Supernova Burst...</div>
-            <div class="ad-timer" id="ad-timer">3</div>
-            <p style="font-size: 11px; color: #666;">In production, your Ad SDK displays here.</p>
-        </div>
-    </div>
+  <aside id="dock">
+    <div class="dock-head"><h2>Upgrades</h2><span>Spend mass</span></div>
+    <ul id="upgrades"></ul>
+    <p class="dock-foot">Debris size and value follow the mass you are holding. Spending can drop you a tier, and smaller debris takes longer to earn back. Floors at Cars, City blocks, Moons and Solar systems stop the fall once you have reached them.</p>
+  </aside>
+</div>
 
-    <script>
-        // Web Audio Synthesizer
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        let audioCtx = null;
+<div id="adModal" hidden role="dialog" aria-modal="true" aria-labelledby="adTitle">
+  <div class="ad-card">
+    <h3 id="adTitle">Sponsor break</h3>
+    <div id="adCount">5</div>
+    <div class="bar"><i id="adBar"></i></div>
+    <p>Your Supernova Burst starts when this ends.</p>
+    <button class="ad-cancel" id="adCancel" type="button">Cancel</button>
+  </div>
+</div>
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new AudioCtx();
-        }
+<script>
+(() => {
+'use strict';
 
-        function playAbsorbSound(pitchModifier = 1) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = 'sine';
-            const startFreq = 120 * pitchModifier;
-            const endFreq = 40 * pitchModifier;
-            
-            osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(Math.max(endFreq, 10), audioCtx.currentTime + 0.15);
-            
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
-        }
+/* ---------- Tuning (change these to rebalance the game) ---------- */
+const CFG = {
+  tierBase: 150,        // mass needed to reach tier 2 (Paper scraps)
+  tierRatio: 2.7,       // each tier needs 2.7x the mass of the one before
+  valueRatio: 1.7,      // each tier's debris is worth 1.7x the previous tier
+  costGrowth: 1.3,      // Cost = Base Cost x 1.3 ^ Quantity Owned
+  spawnRate: 0.8,       // debris per second before upgrades
+  floors: [4, 7, 10, 13], // tier indexes that lock in once reached (Cars, City blocks, Moons, Solar systems)
+  burstMs: 3 * 60 * 1000,
+  adSeconds: 5,
+  offlineCapHours: 3,   // most time that counts while you are away
+  offlineEff: 0.25,     // share of your recent rate earned while away
+  saveKey: 'blackHoleVacuum.v2'
+};
 
-        function playSupernovaSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(60, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.5);
-            
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.6);
-        }
+const TIERS = [
+  { key: 'dust',     name: 'Dust motes',      spark: '#c8b79a' },
+  { key: 'scrap',    name: 'Paper scraps',    spark: '#ece5d3' },
+  { key: 'clip',     name: 'Paperclips',      spark: '#c9d1dc' },
+  { key: 'coin',     name: 'Coins',           spark: '#e6b84a' },
+  { key: 'car',      name: 'Cars',            spark: '#ff7a6b' },
+  { key: 'house',    name: 'Houses',          spark: '#d9a066' },
+  { key: 'tower',    name: 'Skyscrapers',     spark: '#8fa3c9' },
+  { key: 'block',    name: 'City blocks',     spark: '#ffe08a' },
+  { key: 'ship',     name: 'Cargo ships',     spark: '#5bc0de' },
+  { key: 'mountain', name: 'Mountain ranges', spark: '#f1f0fa' },
+  { key: 'moon',     name: 'Moons',           spark: '#d9d6cf' },
+  { key: 'planet',   name: 'Planets',         spark: '#7fb3ff' },
+  { key: 'star',     name: 'Stars',           spark: '#ffd36b' },
+  { key: 'system',   name: 'Solar systems',   spark: '#b4aaff' },
+  { key: 'light',    name: 'Light',           spark: '#ffffff' }
+];
+const TOP = TIERS.length - 1;
+const tierAt = i => (i <= 0 ? 0 : CFG.tierBase * Math.pow(CFG.tierRatio, i - 1));
+const tierVal = i => Math.pow(CFG.valueRatio, i);
 
-        // Tiers Progression
-        const TIERS = [
-            { threshold: 0, name: "Dust Motes", color: "#a0a0c0", particleSize: 2 },
-            { threshold: 100, name: "Paper Scraps", color: "#e0e0e0", particleSize: 3.5 },
-            { threshold: 500, name: "Office Supplies", color: "#ff9900", particleSize: 5 },
-            { threshold: 2500, name: "Furniture", color: "#8b5a2b", particleSize: 7 },
-            { threshold: 10000, name: "Vehicles", color: "#00ccff", particleSize: 10 },
-            { threshold: 50000, name: "Skyscrapers", color: "#ff0055", particleSize: 15 },
-            { threshold: 250000, name: "Planets & Stars", color: "#9900ff", particleSize: 22 },
-            { threshold: 1000000, name: "Pure Light", color: "#ffffff", particleSize: 30 }
-        ];
+const UPG = [
+  { id: 'hole',    name: 'Expand Hole',   base: 10,  max: 25, eff: n => 'Hole size x' + ((22 + 3 * n) / 22).toFixed(2) },
+  { id: 'pull',    name: 'Gravity Pull',  base: 15,  max: 30, eff: n => 'Pull strength x' + (1 + 0.2 * n).toFixed(1) },
+  { id: 'hor',     name: 'Event Horizon', base: 40,  max: 25, eff: n => 'Reach x' + (1 + 0.12 * n).toFixed(2) },
+  { id: 'auto',    name: 'Auto-Vacuum',   base: 120, max: 20, eff: n => n ? 'Pulse every ' + (9 / (1 + 0.3 * n)).toFixed(1) + 's' : 'No automatic pulses yet' },
+  { id: 'field',   name: 'Debris Field',  base: 200, max: 30, eff: n => (CFG.spawnRate * (1 + 0.15 * n)).toFixed(1) + ' debris per second' },
+  { id: 'yield',   name: 'Mass Yield',    base: 400, max: 40, eff: n => 'Debris mass x' + (1 + 0.15 * n).toFixed(2) }
+];
 
-        // Game State
-        let state = {
-            mass: 0,
-            sizeLevel: 1,
-            pullLevel: 1,
-            holeRadius: 25,
-            pullForce: 0.15
-        };
+const TAU = Math.PI * 2;
+const $ = id => document.getElementById(id);
+const REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // Load Save Data
-        const saved = localStorage.getItem('bh_vacuum_save');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                state = { ...state, ...parsed };
-            } catch(e) {}
-        }
+/* ---------- State ---------- */
+const S = { mass: 0, floor: 0, own: { hole: 0, pull: 0, hor: 0, auto: 0, field: 0, yield: 0 }, burstEnd: 0, sound: true, rate: 0, t: 0 };
 
-        function saveGame() {
-            localStorage.setItem('bh_vacuum_save', JSON.stringify(state));
-        }
+const cost = (u, n) => Math.ceil(u.base * Math.pow(CFG.costGrowth, n));
+function tierOfMass(m) { let k = 0; for (let i = 0; i < TIERS.length; i++) if (m >= tierAt(i)) k = i; return k; }
+const tierFor = m => Math.max(S.floor, tierOfMass(m));
+const effTier = () => tierFor(S.mass);
+const yieldMul = () => 1 + 0.15 * S.own.yield;
+const burstActive = () => Date.now() < S.burstEnd;
 
-        // Canvas Setup
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
+const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+function fmt(n, int) {
+  if (!isFinite(n)) return '∞';
+  if (n < 1000) return (n < 10 && !int) ? String(Math.round(n * 10) / 10) : String(Math.floor(n));
+  const e = Math.floor(Math.log10(n) / 3);
+  if (e >= SUF.length) return n.toExponential(2).replace('+', '');
+  const v = n / Math.pow(1000, e);
+  return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : String(Math.floor(v))) + SUF[e];
+}
 
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+/* ---------- Save / load (localStorage, no accounts) ---------- */
+function save() {
+  try {
+    S.t = Date.now();
+    localStorage.setItem(CFG.saveKey, JSON.stringify({ v: 2, mass: S.mass, floor: S.floor, own: S.own, burstEnd: S.burstEnd, sound: S.sound, rate: rate, t: S.t }));
+  } catch (e) { /* storage unavailable: the game still runs, it just will not persist */ }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(CFG.saveKey);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d || d.v !== 2) return;
+    const num = x => (Number.isFinite(x) && x >= 0 ? x : 0);
+    S.mass = num(d.mass);
+    S.floor = Math.min(TOP, Math.floor(num(d.floor)));
+    for (const u of UPG) S.own[u.id] = Math.min(u.max, Math.floor(num(d.own && d.own[u.id])));
+    S.burstEnd = num(d.burstEnd); S.sound = d.sound !== false; S.rate = num(d.rate); S.t = num(d.t);
+  } catch (e) { /* ignore corrupt saves */ }
+}
 
-        // Hole Position (Follows Touch/Cursor)
-        const hole = {
-            x: width / 2,
-            y: height / 2,
-            targetX: width / 2,
-            targetY: height / 2,
-            pulse: 0
-        };
+/* ---------- Audio (WebAudio synth, starts on first touch) ---------- */
+let actx = null, master = null, noiseBuf = null, lastCrunch = 0;
+function initAudio() {
+  if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    master = actx.createGain(); master.gain.value = 0.5; master.connect(actx.destination);
+    noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const ch = noiseBuf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  } catch (e) { actx = null; }
+}
+const audioOk = () => S.sound && actx && actx.state !== 'closed';
+function tone(type, f0, f1, dur, gain, delay) {
+  if (!audioOk()) return;
+  const t = actx.currentTime + (delay || 0);
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+function noise(dur, gain, freq, q, delay) {
+  if (!audioOk()) return;
+  const t = actx.currentTime + (delay || 0);
+  const s = actx.createBufferSource(); s.buffer = noiseBuf; s.playbackRate.value = 0.7 + Math.random() * 0.6;
+  const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(master);
+  s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.03);
+}
+function sndPulse() { tone('sine', 150, 45, 0.3, 0.2); noise(0.2, 0.06, 500, 0.7); }
+function sndCrunch(m) {
+  if (!audioOk()) return;
+  const t = actx.currentTime;
+  if (t - lastCrunch < 0.045) return;
+  lastCrunch = t;
+  noise(0.09 + 0.2 * m, 0.2 + 0.2 * m, 2300 - 1600 * m, 1.4);
+  if (m > 0.25) { tone('sawtooth', 110 - 60 * m, 32, 0.22, 0.1 + 0.12 * m); noise(0.12, 0.16, 700, 1, 0.05); }
+}
+function sndBuy() { tone('triangle', 520, 800, 0.12, 0.18); }
+function sndUp() { [440, 554, 659, 880].forEach((f, i) => tone('triangle', f, f, 0.2, 0.2, i * 0.09)); }
+function sndDrop() { tone('sawtooth', 240, 60, 0.35, 0.18); noise(0.25, 0.12, 400, 0.8); }
+function sndBurst() { tone('sawtooth', 60, 1200, 1.2, 0.2); noise(1.2, 0.2, 800, 0.6); }
 
-        // Particle System
-        const particles = [];
-        const MAX_PARTICLES = 120;
+/* ---------- Canvas ---------- */
+const stage = $('stage'), cv = $('c'), ctx = cv.getContext('2d', { alpha: false });
+let W = 400, H = 400, DPR = 1, U = 1, sc = 0.6, bg = null;
+let hx = 200, hy = 216, tx = 200, ty = 216;
 
-        class Particle {
-            constructor() {
-                this.reset();
-            }
+function buildStars() {
+  bg = document.createElement('canvas');
+  bg.width = Math.floor(W * DPR); bg.height = Math.floor(H * DPR);
+  const b = bg.getContext('2d');
+  b.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const n = Math.floor(W * H / 2600);
+  for (let i = 0; i < n; i++) {
+    const r = Math.random() < 0.08 ? 1.5 : 0.8;
+    b.globalAlpha = 0.25 + Math.random() * 0.6;
+    const k = Math.random();
+    b.fillStyle = k < 0.18 ? '#b9a8ff' : k < 0.34 ? '#ffd2a8' : '#ffffff';
+    b.fillRect(Math.random() * W, Math.random() * H, r, r);
+  }
+}
+let sized = false;
+function resize() {
+  const r = stage.getBoundingClientRect();
+  const oW = W, oH = H;
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
+  U = Math.max(0.8, Math.min(2, Math.min(W, H) / 400));
+  sc = 0.6 * U;
+  if (!sized) { hx = tx = W / 2; hy = ty = H * 0.54; sized = true; }
+  else { hx = hx / oW * W; hy = hy / oH * H; tx = tx / oW * W; ty = ty / oH * H; }
+  buildStars();
+}
 
-            reset() {
-                // Spawn randomly outside edges or across screen
-                if (Math.random() < 0.5) {
-                    this.x = Math.random() < 0.5 ? -20 : width + 20;
-                    this.y = Math.random() * height;
-                } else {
-                    this.x = Math.random() * width;
-                    this.y = Math.random() < 0.5 ? -20 : height + 20;
-                }
-                
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                
-                // Determine current tier characteristics
-                const currentTierIndex = getCurrentTierIndex();
-                const tier = TIERS[currentTierIndex];
-                
-                this.size = tier.particleSize * (0.8 + Math.random() * 0.4);
-                this.color = tier.color;
-                this.value = Math.pow(2, currentTierIndex);
-            }
+/* ---------- World ---------- */
+let holeR = 13, holeGlow = 0, flash = 0, shakeMag = 0, T = 0, ringId = 0, lastTier = 0;
+const items = [], rings = [], sparks = [], swirl = [];
+let spawnAcc = 0, autoAcc = 0, pressed = false;
 
-            update() {
-                const dx = hole.x - this.x;
-                const dy = hole.y - this.y;
-                const distSq = dx * dx + dy * dy;
-                const dist = Math.sqrt(distSq);
+const targetHoleR = () => (22 + 3 * S.own.hole) * sc;
+function reachNow() {
+  const base = (0.15 * Math.min(W, H) + 2 * holeR) * (1 + 0.12 * S.own.hor) * (burstActive() ? 2 : 1);
+  return Math.min(base, Math.hypot(W, H) * 0.6);
+}
+function syncSwirl() {
+  const n = 130 + 4 * S.own.hole;
+  while (swirl.length < n) swirl.push({ a: Math.random() * TAU, r: 1.15 + Math.random() * 2.6, s: 0.6 + Math.random() * 1.4 });
+  swirl.length = Math.min(swirl.length, n);
+}
+function shake(m) { shakeMag = Math.min(16, shakeMag + m); }
 
-                // Gravitational acceleration
-                const force = (state.pullForce * 1000) / Math.max(distSq, 400);
-                this.vx += (dx / dist) * force;
-                this.vy += (dy / dist) * force;
+function spawnItem(init) {
+  const eff = effTier();
+  const ti = (Math.random() < 0.8 || eff === 0) ? eff : eff - 1;
+  const size = Math.min(U * 2.6 * Math.pow(1.26, ti), Math.min(W, H) * 0.15) * (0.85 + Math.random() * 0.3);
+  let x, y;
+  if (init) { x = W * Math.random(); y = H * Math.random(); }
+  else {
+    const side = Math.floor(Math.random() * 4);
+    if (side === 0) { x = -20; y = Math.random() * H; } else if (side === 1) { x = W + 20; y = Math.random() * H; }
+    else if (side === 2) { x = Math.random() * W; y = -20; } else { x = Math.random() * W; y = H + 20; }
+  }
+  const a = Math.atan2(H * Math.random() - y, W * Math.random() - x), sp = (40 + 45 * Math.random()) * U;
+  items.push({
+    ti, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 1.6,
+    size, age: init ? 1 : 0, pullUntil: 0, ring: -1, hue: Math.floor(Math.random() * 360),
+    r: Array.from({ length: 8 }, Math.random), val: tierVal(ti) * (0.9 + Math.random() * 0.2)
+  });
+}
+function firePulse(auto) {
+  if (rings.length > 10) rings.shift();
+  rings.push({ id: ++ringId, r: holeR * 1.1, max: reachNow() * 1.2, speed: 1000 * U, auto: !!auto, gold: burstActive() });
+}
 
-                // Dampen velocity slightly
-                this.vx *= 0.98;
-                this.vy *= 0.98;
+/* ---------- Popups & toast ---------- */
+const popsEl = $('pops'); let popCount = 0, lastPop = 0;
+function popup(x, y, text) {
+  if (popCount > 24) return;
+  const el = document.createElement('span');
+  el.className = 'pop'; el.textContent = text;
+  el.style.left = Math.max(30, Math.min(W - 30, x)) + 'px'; el.style.top = y + 'px';
+  el.style.setProperty('--dx', (Math.random() * 44 - 22) + 'px');
+  popsEl.appendChild(el); popCount++;
+  el.addEventListener('animationend', () => { el.remove(); popCount--; });
+}
+const toastEl = $('toast'); let toastT = 0;
+function toast(msg, bad) {
+  toastEl.textContent = msg; toastEl.classList.toggle('bad', !!bad); toastEl.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 3200);
+}
 
-                this.x += this.vx;
-                this.y += this.vy;
+/* ---------- Economy ---------- */
+let gained = 0, rate = 0;
+function updateFloor(quiet) {
+  for (const f of CFG.floors) {
+    if (f > S.floor && S.mass >= tierAt(f)) {
+      S.floor = f;
+      if (!quiet) toast('Floor locked: ' + TIERS[f].name + '. Spending can no longer drop you below it.');
+    }
+  }
+}
+function addMass(v) { S.mass += v; gained += v; updateFloor(false); }
+function absorb(it) {
+  const mag = it.ti / TOP, v = it.val * yieldMul();
+  addMass(v); sndCrunch(mag); shake(0.3 + mag * 6);
+  holeGlow = Math.min(1.5, holeGlow + 0.3 + mag * 0.8);
+  const n = 3 + Math.floor(mag * 12), col = TIERS[it.ti].spark;
+  for (let i = 0; i < n && sparks.length < 300; i++) {
+    const a = Math.random() * TAU, sp = (60 + Math.random() * 180) * U;
+    sparks.push({ x: hx + Math.cos(a) * holeR, y: hy + Math.sin(a) * holeR, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.5 + Math.random() * 0.5, c: col, s: 1 + Math.random() * 1.8 });
+  }
+  if (T - lastPop > 0.07) {
+    lastPop = T;
+    popup(hx + (Math.random() - 0.5) * holeR * 3, hy - holeR * 1.6 - Math.random() * 20, '+' + fmt(v));
+  }
+}
 
-                // Absorption check
-                const absorbDist = state.holeRadius * 0.6;
-                if (dist < absorbDist) {
-                    state.mass += this.value;
-                    playAbsorbSound(1 + (this.value * 0.05));
-                    this.reset();
-                    updateUI();
-                    saveGame();
-                }
-            }
+/* ---------- Input: drag the hole ---------- */
+function setTarget(e) {
+  const r = cv.getBoundingClientRect();
+  tx = Math.max(0, Math.min(W, e.clientX - r.left)); ty = Math.max(0, Math.min(H, e.clientY - r.top));
+  $('hint').classList.add('gone');
+}
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); initAudio(); pressed = true;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* not supported */ }
+  setTarget(e);
+});
+cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || pressed) setTarget(e); });
+const release = () => { pressed = false; };
+cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+cv.addEventListener('keydown', e => {
+  const d = 40 * U, k = e.key;
+  if (k === 'ArrowLeft') tx = Math.max(0, tx - d); else if (k === 'ArrowRight') tx = Math.min(W, tx + d);
+  else if (k === 'ArrowUp') ty = Math.max(0, ty - d); else if (k === 'ArrowDown') ty = Math.min(H, ty + d);
+  else return;
+  e.preventDefault(); initAudio(); $('hint').classList.add('gone');
+});
+document.addEventListener('pointerdown', initAudio, { once: true });
 
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+/* ---------- Upgrades UI ---------- */
+const upEls = {};
+function buildUpgrades() {
+  const ul = $('upgrades');
+  for (const u of UPG) {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'up';
+    b.innerHTML = '<span class="up-name"></span><span class="up-eff"></span><span class="up-warn"></span><span class="up-row"><span class="up-own"></span><span class="up-cost"></span></span>';
+    b.querySelector('.up-name').textContent = u.name;
+    b.addEventListener('click', () => buy(u.id));
+    li.appendChild(b); ul.appendChild(li);
+    upEls[u.id] = { b, eff: b.querySelector('.up-eff'), warn: b.querySelector('.up-warn'), own: b.querySelector('.up-own'), cost: b.querySelector('.up-cost') };
+  }
+}
+function buy(id) {
+  const u = UPG.find(x => x.id === id), n = S.own[id];
+  if (n >= u.max) return;
+  const c = cost(u, n);
+  if (S.mass < c) return;
+  S.mass -= c; S.own[id] = n + 1;
+  sndBuy(); shake(2); holeGlow = Math.min(1.5, holeGlow + 0.6);
+  if (id === 'hole') syncSwirl();
+  save(); updateHud(true);
+}
 
-        // Initialize Particles
-        for (let i = 0; i < MAX_PARTICLES; i++) {
-            particles.push(new Particle());
-        }
+/* ---------- HUD ---------- */
+const el = { mass: $('massVal'), rate: $('rate'), tier: $('tierName'), floor: $('floorTxt'), bar: $('tierBar'), next: $('nextTxt'), burst: $('burstBtn'), burstSub: $('burstSub') };
+const cache = {};
+function setText(node, key, val) { if (cache[key] !== val) { cache[key] = val; node.textContent = val; } }
+function updateHud(force) {
+  if (force) for (const k in cache) delete cache[k];
+  const et = effTier();
+  setText(el.mass, 'mass', fmt(S.mass, true));
+  setText(el.rate, 'rate', fmt(rate) + '/s');
+  setText(el.tier, 'tier', TIERS[et].name);
+  setText(el.floor, 'floor', S.floor > 0 ? 'Floor: ' + TIERS[S.floor].name : '');
+  const lo = tierAt(et), hi = et < TOP ? tierAt(et + 1) : lo;
+  const held = S.mass < lo;
+  const p = et >= TOP ? 1 : held ? 0 : Math.max(0, Math.min(1, (S.mass - lo) / (hi - lo)));
+  const w = (p * 100).toFixed(1) + '%';
+  if (cache.bar !== w) { cache.bar = w; el.bar.style.width = w; }
+  setText(el.next, 'next', et >= TOP ? 'Top tier reached' : held ? 'Held by floor. Reach ' + fmt(lo, true) + ' to earn it back.' : 'Next: ' + TIERS[et + 1].name + ' at ' + fmt(hi, true));
+  for (const u of UPG) {
+    const e = upEls[u.id], n = S.own[u.id], maxed = n >= u.max, c = cost(u, n);
+    setText(e.eff, u.id + 'e', u.eff(n));
+    setText(e.own, u.id + 'o', maxed ? 'Maxed' : 'Owned ' + n);
+    setText(e.cost, u.id + 'c', maxed ? 'MAX' : fmt(c, true));
+    const can = !maxed && S.mass >= c;
+    const after = can ? tierFor(S.mass - c) : et;
+    setText(e.warn, u.id + 'w', can && after < et ? 'Drops you to ' + TIERS[after].name : '');
+    e.b.disabled = !can; e.b.classList.toggle('can', can);
+  }
+  const rem = S.burstEnd - Date.now();
+  if (rem > 0) {
+    const s = Math.ceil(rem / 1000), t = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    setText(el.burstSub, 'bs', 'Reach x2 · ' + t + ' left');
+    el.burst.classList.add('active');
+  } else {
+    setText(el.burstSub, 'bs', 'Watch an ad: reach x2 for 3 min');
+    el.burst.classList.remove('active');
+  }
+}
 
-        function getCurrentTierIndex() {
-            let index = 0;
-            for (let i = 0; i < TIERS.length; i++) {
-                if (state.mass >= TIERS[i].threshold) index = i;
-            }
-            return index;
-        }
+/* ---------- Rewarded ad (placeholder) ---------- */
+const adModal = $('adModal'); let adTimer = 0;
+/* AD HOOK: replace the body of showRewardedAd with your ad SDK's rewarded-ad call.
+   Call onReward() only after the SDK reports the ad was watched to the end. */
+function showRewardedAd(onReward) {
+  let left = CFG.adSeconds;
+  $('adCount').textContent = left;
+  const bar = $('adBar'); bar.style.transition = 'none'; bar.style.width = '0%';
+  adModal.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = 'width 1s linear'; bar.style.width = (100 / CFG.adSeconds) + '%'; }));
+  $('adCancel').focus();
+  clearInterval(adTimer);
+  adTimer = setInterval(() => {
+    left--;
+    $('adCount').textContent = Math.max(0, left);
+    bar.style.width = (((CFG.adSeconds - left) / CFG.adSeconds) * 100) + '%';
+    if (left <= 0) { clearInterval(adTimer); adModal.hidden = true; onReward(); }
+  }, 1000);
+}
+function closeAd() { clearInterval(adTimer); adModal.hidden = true; }
+$('adCancel').addEventListener('click', closeAd);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !adModal.hidden) closeAd(); });
 
-        // Pointer Controls
-        function handlePointer(e) {
-            initAudio();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            hole.targetX = clientX;
-            hole.targetY = clientY;
-        }
+function activateBurst() {
+  S.burstEnd = Date.now() + CFG.burstMs;
+  sndBurst(); shake(14); if (!REDUCE) flash = 0.8; holeGlow = 1.5;
+  rings.push({ id: ++ringId, r: holeR, max: Math.hypot(W, H), speed: 1600 * U, auto: false, gold: true });
+  toast('Supernova Burst: reach doubled for 3 minutes');
+  save(); updateHud(true);
+}
+el.burst.addEventListener('click', () => { initAudio(); if (!burstActive()) showRewardedAd(activateBurst); });
 
-        window.addEventListener('pointerdown', handlePointer);
-        window.addEventListener('pointermove', (e) => {
-            if (e.buttons > 0 || e.touches) handlePointer(e);
-        });
+/* ---------- Sound toggle & reset ---------- */
+const sndBtn = $('sndBtn');
+function syncSound() { sndBtn.setAttribute('aria-pressed', S.sound ? 'true' : 'false'); sndBtn.setAttribute('aria-label', S.sound ? 'Sound on' : 'Sound off'); }
+sndBtn.addEventListener('click', () => { initAudio(); S.sound = !S.sound; syncSound(); if (S.sound) sndBuy(); save(); });
+const resetBtn = $('resetBtn'); let armed = false, armT = 0;
+resetBtn.addEventListener('click', () => {
+  if (!armed) {
+    armed = true; resetBtn.classList.add('armed'); toast('Tap reset again to erase all progress', true);
+    armT = setTimeout(() => { armed = false; resetBtn.classList.remove('armed'); }, 3500);
+    return;
+  }
+  clearTimeout(armT); armed = false; resetBtn.classList.remove('armed');
+  S.mass = 0; S.floor = 0; S.burstEnd = 0; S.t = 0; rate = 0; gained = 0;
+  for (const u of UPG) S.own[u.id] = 0;
+  items.length = 0; rings.length = 0; sparks.length = 0;
+  holeR = targetHoleR(); syncSwirl(); lastTier = 0;
+  for (let i = 0; i < 8; i++) spawnItem(true);
+  $('hint').classList.remove('gone');
+  save(); updateHud(true); toast('Progress erased', true);
+});
 
-        // UI Upgrades Logic
-        const massVal = document.getElementById('mass-val');
-        const tierVal = document.getElementById('tier-val');
-        const costSize = document.getElementById('cost-size');
-        const costPull = document.getElementById('cost-pull');
+/* ---------- Debris drawers (simple colored shapes, local coords, s = half size) ---------- */
+function rr(c, x, y, w, h, r) {
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+const disc = (c, x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); };
+const D = {
+  dust(c, s) { c.fillStyle = '#c8b79a'; disc(c, 0, 0, Math.max(1.4, s * 0.7)); },
+  scrap(c, s, it) { c.fillStyle = '#ece5d3'; c.beginPath(); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, r = s * (0.75 + it.r[i] * 0.4); const px = Math.cos(a) * r, py = Math.sin(a) * r; i ? c.lineTo(px, py) : c.moveTo(px, py); } c.closePath(); c.fill(); },
+  clip(c, s) { c.strokeStyle = '#c9d1dc'; c.lineWidth = Math.max(1.2, s * 0.22); c.lineCap = 'round'; c.beginPath(); c.moveTo(-s * 0.2, -s * 0.8); c.lineTo(-s * 0.2, s * 0.6); c.arc(s * 0.05, s * 0.6, s * 0.25, Math.PI, 0, true); c.lineTo(s * 0.3, -s * 0.5); c.stroke(); c.lineCap = 'butt'; },
+  coin(c, s) { c.fillStyle = '#e6b84a'; disc(c, 0, 0, s); c.fillStyle = '#f6dc8c'; disc(c, 0, 0, s * 0.55); },
+  car(c, s, it) { c.fillStyle = 'hsl(' + it.hue + ',70%,52%)'; rr(c, -s, -s * 0.15, 2 * s, s * 0.55, s * 0.14); c.fill(); c.fillRect(-s * 0.5, -s * 0.55, s * 0.95, s * 0.45); c.fillStyle = '#14121f'; disc(c, -s * 0.55, s * 0.4, s * 0.22); disc(c, s * 0.55, s * 0.4, s * 0.22); },
+  house(c, s, it) { c.fillStyle = 'hsl(' + it.hue + ',35%,62%)'; c.fillRect(-s * 0.8, -s * 0.15, s * 1.6, s * 0.95); c.fillStyle = '#8a3b2e'; c.beginPath(); c.moveTo(-s * 0.95, -s * 0.15); c.lineTo(0, -s * 0.85); c.lineTo(s * 0.95, -s * 0.15); c.closePath(); c.fill(); },
+  tower(c, s) { c.fillStyle = '#3b4a66'; c.fillRect(-s * 0.38, -s, s * 0.76, s * 2); c.fillStyle = '#ffe08a'; for (let y = -s * 0.8; y < s * 0.8; y += s * 0.32) { c.fillRect(-s * 0.2, y, s * 0.12, s * 0.14); c.fillRect(s * 0.08, y, s * 0.12, s * 0.14); } },
+  block(c, s, it) { const hs = [0.9, 1.5, 1.1, 1.9, 1.2]; const bw = 2 * s / hs.length; for (let i = 0; i < hs.length; i++) { const h = hs[i] * s * (0.8 + it.r[i] * 0.4); c.fillStyle = 'hsl(' + (215 + it.r[i] * 30) + ',25%,' + (30 + it.r[i + 2] * 14) + '%)'; c.fillRect(-s + i * bw, s * 0.7 - h, bw * 0.9, h); } },
+  ship(c, s, it) { c.fillStyle = '#2b3b57'; c.beginPath(); c.moveTo(-s, -s * 0.05); c.lineTo(s, -s * 0.05); c.lineTo(s * 0.75, s * 0.45); c.lineTo(-s * 0.8, s * 0.45); c.closePath(); c.fill(); const cols = ['#d9534f', '#f0ad4e', '#5bc0de', '#5cb85c']; for (let i = 0; i < 5; i++) { c.fillStyle = cols[(i + Math.floor(it.r[0] * 4)) % 4]; c.fillRect(-s * 0.8 + i * s * 0.22, -s * 0.28, s * 0.2, s * 0.22); } c.fillStyle = '#e8e4f5'; c.fillRect(s * 0.5, -s * 0.5, s * 0.3, s * 0.45); },
+  mountain(c, s) { c.fillStyle = '#4b4a63'; c.beginPath(); c.moveTo(-s, s * 0.6); c.lineTo(-s * 0.3, -s * 0.5); c.lineTo(s * 0.1, s * 0.1); c.lineTo(s * 0.45, -s * 0.8); c.lineTo(s, s * 0.6); c.closePath(); c.fill(); c.fillStyle = '#f1f0fa'; c.beginPath(); c.moveTo(s * 0.45, -s * 0.8); c.lineTo(s * 0.28, -s * 0.4); c.lineTo(s * 0.62, -s * 0.4); c.closePath(); c.fill(); },
+  moon(c, s) { c.fillStyle = '#b9b6c0'; disc(c, 0, 0, s); c.fillStyle = 'rgba(60,58,70,.4)'; disc(c, s * 0.3, -s * 0.2, s * 0.22); disc(c, -s * 0.35, s * 0.3, s * 0.15); },
+  planet(c, s, it) { c.fillStyle = 'hsl(' + it.hue + ',60%,50%)'; disc(c, 0, 0, s); c.strokeStyle = 'rgba(235,220,190,.7)'; c.lineWidth = s * 0.08; c.beginPath(); c.ellipse(0, 0, s * 1.5, s * 0.4, -0.4, 0, TAU); c.stroke(); },
+  star(c, s) { const g = c.createRadialGradient(0, 0, 0, 0, 0, s * 1.8); g.addColorStop(0, '#fff6d8'); g.addColorStop(0.35, '#ffd36b'); g.addColorStop(1, 'rgba(255,140,40,0)'); c.fillStyle = g; disc(c, 0, 0, s * 1.8); },
+  system(c, s) { c.strokeStyle = 'rgba(180,170,255,.5)'; c.lineWidth = 1; for (let i = 1; i <= 2; i++) { c.beginPath(); c.ellipse(0, 0, s * (0.5 + i * 0.4), s * (0.2 + i * 0.16), 0, 0, TAU); c.stroke(); } c.fillStyle = '#ffd36b'; disc(c, 0, 0, s * 0.3); c.fillStyle = '#7fb3ff'; disc(c, s * 0.9, 0, s * 0.12); },
+  light(c, s) { const L = s * 2.2, g = c.createLinearGradient(-L, 0, L, 0); g.addColorStop(0, 'rgba(180,230,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(180,230,255,0)'); c.strokeStyle = g; c.lineWidth = Math.max(2, s * 0.18); c.lineCap = 'round'; c.beginPath(); c.moveTo(-L, 0); c.lineTo(L, 0); c.stroke(); c.lineCap = 'butt'; }
+};
 
-        function getSizeCost() { return Math.floor(10 * Math.pow(1.6, state.sizeLevel - 1)); }
-        function getPullCost() { return Math.floor(15 * Math.pow(1.6, state.pullLevel - 1)); }
+/* ---------- Update ---------- */
+function update(dt) {
+  T += dt;
+  const k = 1 - Math.exp(-9 * dt);
+  hx += (tx - hx) * k; hy += (ty - hy) * k;
+  holeR += (targetHoleR() - holeR) * Math.min(1, dt * 4);
+  holeGlow = Math.max(0, holeGlow - dt * 1.8);
+  flash = Math.max(0, flash - dt * 1.6);
+  shakeMag *= Math.exp(-9 * dt);
 
-        function updateUI() {
-            massVal.innerText = state.mass.toLocaleString();
-            
-            const tierIndex = getCurrentTierIndex();
-            tierVal.innerText = TIERS[tierIndex].name;
+  const R = reachNow(), Gp = 1 + 0.2 * S.own.pull, burst = burstActive();
+  spawnAcc += dt * CFG.spawnRate * (1 + 0.15 * S.own.field);
+  while (spawnAcc >= 1) { spawnAcc -= 1; if (items.length < 70) spawnItem(false); }
+  if (S.own.auto > 0) { autoAcc += dt; if (autoAcc >= 9 / (1 + 0.3 * S.own.auto)) { autoAcc = 0; firePulse(true); sndPulse(); } }
 
-            costSize.innerText = `${getSizeCost()} M`;
-            costPull.innerText = `${getPullCost()} M`;
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const g = rings[i]; g.r += g.speed * dt;
+    for (const it of items) {
+      if (it.ring === g.id) continue;
+      if (Math.hypot(it.x - hx, it.y - hy) <= g.r) { it.ring = g.id; it.pullUntil = T + 2.2; }
+    }
+    if (g.r > g.max + 30) rings.splice(i, 1);
+  }
 
-            state.holeRadius = 25 + (state.sizeLevel - 1) * 4;
-            state.pullForce = 0.15 + (state.pullLevel - 1) * 0.08;
-        }
+  const lim = Math.hypot(W, H);
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i]; it.age += dt;
+    const dx = hx - it.x, dy = hy - it.y, d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
+    const near = d < R ? 260 * U * Math.pow(1 - d / R, 1.5) : 0, far = 150 * U / (d / U + 250);
+    const a = Gp * (near + far);
+    it.vx += nx * a * dt; it.vy += ny * a * dt;
+    let damp = 0.15;
+    if (T < it.pullUntil) { it.vx += (nx * 700 * U - ny * 120 * U) * dt; it.vy += (ny * 700 * U + nx * 120 * U) * dt; damp = 1.6; }
+    const f = Math.exp(-damp * dt); it.vx *= f; it.vy *= f;
+    it.x += it.vx * dt; it.y += it.vy * dt; it.rot += it.vr * dt;
+    if (d < holeR * 0.85) { absorb(it); items.splice(i, 1); continue; }
+    if (it.age > 30 || it.x < -160 || it.x > W + 160 || it.y < -160 || it.y > H + 160 || d > lim) items.splice(i, 1);
+  }
 
-        document.getElementById('btn-size').addEventListener('click', () => {
-            const cost = getSizeCost();
-            if (state.mass >= cost) {
-                state.mass -= cost;
-                state.sizeLevel++;
-                updateUI();
-                saveGame();
-            }
-        });
+  for (const p of swirl) {
+    const boost = (rings.length ? 1.8 : 1) * (burst ? 1.5 : 1);
+    const w = 2.2 / Math.pow(p.r, 1.3) * boost;
+    p.a += w * dt; p.r -= dt * 0.04 * boost;
+    if (p.r < 1.05) { p.r = 3.4; p.a = Math.random() * TAU; }
+  }
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i]; s.life -= dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.96; s.vy *= 0.96;
+    if (s.life <= 0) sparks.splice(i, 1);
+  }
 
-        document.getElementById('btn-pull').addEventListener('click', () => {
-            const cost = getPullCost();
-            if (state.mass >= cost) {
-                state.mass -= cost;
-                state.pullLevel++;
-                updateUI();
-                saveGame();
-            }
-        });
+  const et = effTier();
+  if (et !== lastTier) {
+    if (et > lastTier) { toast(TIERS[et].name + ' now drift in', false); sndUp(); shake(8); if (!REDUCE) flash = 0.4; }
+    else { toast('Tier dropped: ' + TIERS[et].name + ' now drift in', true); sndDrop(); shake(4); }
+    lastTier = et; updateHud(true);
+  }
 
-        // Rewarded Ad Simulation
-        /* AD HOOK: replace the body of showRewardedAd with your ad SDK's rewarded-ad call.
-           Call onReward() only after the SDK reports the ad was watched to the end. */
-        const adModal = document.getElementById('ad-modal');
-        const adTimer = document.getElementById('ad-timer');
+  const m = shakeMag * (REDUCE ? 0.2 : 1);
+  cv.style.transform = m > 0.15 ? 'translate(' + ((Math.random() - 0.5) * 2 * m).toFixed(1) + 'px,' + ((Math.random() - 0.5) * 2 * m).toFixed(1) + 'px) scale(1.03)' : '';
+}
 
-        function showRewardedAd(onReward) {
-            adModal.classList.add('active');
-            let count = 3;
-            adTimer.innerText = count;
+/* ---------- Draw ---------- */
+function draw() {
+  const burst = burstActive();
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.fillStyle = '#06050b'; ctx.fillRect(0, 0, W, H);
+  if (bg) ctx.drawImage(bg, 0, 0, W, H);
 
-            const interval = setInterval(() => {
-                count--;
-                adTimer.innerText = count;
-                if (count <= 0) {
-                    clearInterval(interval);
-                    adModal.classList.remove('active');
-                    onReward();
-                }
-            }, 1000);
-        }
+  ctx.globalCompositeOperation = 'lighter';
+  const gc = burst ? '255,210,90' : '255,138,61';
+  const gr = ctx.createRadialGradient(hx, hy, holeR * 0.9, hx, hy, holeR * (4.2 + holeGlow * 0.5));
+  gr.addColorStop(0, 'rgba(' + gc + ',' + (0.28 + holeGlow * 0.12) + ')'); gr.addColorStop(0.4, 'rgba(138,107,255,.10)'); gr.addColorStop(1, 'rgba(138,107,255,0)');
+  ctx.fillStyle = gr; ctx.fillRect(hx - holeR * 5.5, hy - holeR * 5.5, holeR * 11, holeR * 11);
 
-        document.getElementById('btn-ad').addEventListener('click', () => {
-            showRewardedAd(() => {
-                // Trigger Supernova Effect
-                playSupernovaSound();
-                particles.forEach(p => {
-                    state.mass += p.value * 2;
-                    p.reset();
-                });
-                updateUI();
-                saveGame();
-            });
-        });
+  const pal = burst ? ['#ffffff', '#ffd24a', '#ff6a3d'] : ['#ffe2b8', '#ff8a3d', '#8a6bff'];
+  ctx.lineCap = 'round'; ctx.globalAlpha = 0.6;
+  for (const p of swirl) {
+    const t = (p.r - 1) / 2.6, w = 2.2 / Math.pow(p.r, 1.3);
+    ctx.strokeStyle = t < 0.3 ? pal[0] : t < 0.65 ? pal[1] : pal[2];
+    ctx.lineWidth = p.s;
+    ctx.beginPath(); ctx.arc(hx, hy, p.r * holeR, p.a - w * 0.18, p.a); ctx.stroke();
+  }
+  ctx.lineCap = 'butt'; ctx.globalAlpha = 1;
 
-        // Main Loop
-        function render() {
-            // Smooth Hole Movement
-            hole.x += (hole.targetX - hole.x) * 0.15;
-            hole.y += (hole.targetY - hole.y) * 0.15;
-            hole.pulse += 0.05;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.setLineDash([4, 10]); ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(hx, hy, reachNow(), 0, TAU); ctx.stroke(); ctx.setLineDash([]);
 
-            // Clear Background
-            ctx.fillStyle = 'rgba(5, 5, 8, 0.3)';
-            ctx.fillRect(0, 0, width, height);
+  for (const it of items) {
+    const dx = hx - it.x, dy = hy - it.y, d = Math.hypot(dx, dy);
+    let sx = 1, sy = 1;
+    if (d < holeR * 3.2) { const q = Math.max(0.12, (d - holeR * 0.6) / (holeR * 2.6)); sx = q * (1 + (1 - q) * 2); sy = q; }
+    const ang = Math.atan2(dy, dx);
+    ctx.save(); ctx.translate(it.x, it.y); ctx.globalAlpha = Math.min(1, it.age / 0.6);
+    ctx.rotate(ang); ctx.scale(sx, sy); ctx.rotate(it.rot - ang);
+    D[TIERS[it.ti].key](ctx, it.size, it);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 
-            // Update & Draw Particles
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(hx, hy, holeR, 0, TAU); ctx.fill();
+  ctx.lineWidth = 2 + holeGlow * 2; ctx.strokeStyle = burst ? '#fff1b8' : '#ffd9a8'; ctx.globalAlpha = 0.75 + Math.min(0.25, holeGlow * 0.3);
+  ctx.beginPath(); ctx.arc(hx, hy, holeR * 1.04, 0, TAU); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = burst ? '#ffd24a' : '#ff8a3d'; ctx.globalAlpha = 0.3;
+  ctx.beginPath(); ctx.arc(hx, hy, holeR * 1.22, 0, TAU); ctx.stroke();
+  ctx.globalAlpha = 1;
 
-            // Draw Black Hole Accretion Disk
-            const pulseRadius = state.holeRadius + Math.sin(hole.pulse) * 2;
-            
-            const gradient = ctx.createRadialGradient(
-                hole.x, hole.y, pulseRadius * 0.2,
-                hole.x, hole.y, pulseRadius * 1.8
-            );
-            gradient.addColorStop(0, '#000000');
-            gradient.addColorStop(0.5, '#00f0ff');
-            gradient.addColorStop(0.8, 'rgba(255, 0, 128, 0.5)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  for (const g of rings) {
+    const f = Math.max(0, 1 - g.r / g.max);
+    ctx.globalAlpha = (g.auto ? 0.4 : 0.7) * f; ctx.lineWidth = 1 + 3 * f;
+    ctx.strokeStyle = g.gold ? '#ffd24a' : '#ffb27a';
+    ctx.beginPath(); ctx.arc(hx, hy, g.r, 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(hole.x, hole.y, pulseRadius * 1.8, 0, Math.PI * 2);
-            ctx.fill();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const s of sparks) { ctx.globalAlpha = Math.max(0, s.life); ctx.fillStyle = s.c; ctx.fillRect(s.x, s.y, s.s, s.s); }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  if (flash > 0) { ctx.fillStyle = 'rgba(255,240,220,' + (flash * 0.5) + ')'; ctx.fillRect(0, 0, W, H); }
+}
 
-            // Black Hole Center
-            ctx.fillStyle = '#000000';
-            ctx.beginPath();
-            ctx.arc(hole.x, hole.y, pulseRadius * 0.7, 0, Math.PI * 2);
-            ctx.fill();
+/* ---------- Loop ---------- */
+let last = performance.now() / 1000;
+function frame(ts) {
+  const now = ts / 1000, dt = Math.min(0.05, Math.max(0, now - last)); last = now;
+  update(dt); draw();
+  requestAnimationFrame(frame);
+}
 
-            requestAnimationFrame(render);
-        }
-
-        updateUI();
-        render();
-    </script>
+/* ---------- Boot ---------- */
+load();
+rate = S.rate;
+updateFloor(true);
+buildUpgrades(); syncSound(); resize();
+holeR = targetHoleR(); syncSwirl();
+for (let i = 0; i < 8; i++) spawnItem(true);
+lastTier = effTier();
+if (S.t > 0) {
+  const away = (Date.now() - S.t) / 1000;
+  if (away > 60 && rate > 0) {
+    const gain = rate * Math.min(away, CFG.offlineCapHours * 3600) * CFG.offlineEff;
+    addMass(gain); lastTier = effTier();
+    setTimeout(() => toast('While you were away: +' + fmt(gain, true) + ' mass'), 600);
+  }
+}
+if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+setInterval(() => { rate += (gained / 0.25 - rate) * 0.03; gained = 0; }, 250);
+setInterval(() => updateHud(false), 100);
+setInterval(save, 4000);
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+window.addEventListener('pagehide', save);
+updateHud(true);
+requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
