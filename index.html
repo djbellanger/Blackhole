@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Black Hole Vacuum 2</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Black Hole Vacuum</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
 <style>
 /* Layout: full-bleed canvas stage with a floating HUD; upgrade dock sits right on desktop and below the stage on phones. */
@@ -20,6 +16,7 @@
   --hot: #ffd29a;
   --violet: #8a6bff;
   --warn: #ffb27a;
+  --gold: #ffd24a;
   --f-display: 'Unbounded', system-ui, sans-serif;
   --f-data: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
 }
@@ -72,7 +69,7 @@ button { font: inherit; color: inherit; }
 #tierBar { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ember), var(--hot)); }
 #nextTxt { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
 
-.burst {
+.shopbtn {
   position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
   max-width: calc(100% - 32px); width: max-content;
   display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px;
@@ -80,14 +77,13 @@ button { font: inherit; color: inherit; }
   background: linear-gradient(135deg, rgba(255, 138, 61, .22), rgba(138, 107, 255, .22));
   border: 1px solid var(--ember);
 }
-.burst:hover { background: linear-gradient(135deg, rgba(255, 138, 61, .34), rgba(138, 107, 255, .3)); }
-.burst .b-ic { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--ember); display: grid; place-items: center; }
-.burst .b-ic svg { width: 12px; height: 12px; fill: var(--void); margin-left: 2px; }
-.burst .b-txt { display: grid; gap: 1px; min-width: 0; }
+.shopbtn:hover { background: linear-gradient(135deg, rgba(255, 138, 61, .34), rgba(138, 107, 255, .3)); }
+.shopbtn .b-ic { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--ember); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 14px; color: var(--void); }
+.shopbtn .b-txt { display: grid; gap: 1px; min-width: 0; }
 .b-title { font-family: var(--f-display); font-weight: 500; font-size: 12px; letter-spacing: .02em; }
 .b-sub { font-size: 11px; color: var(--hot); font-variant-numeric: tabular-nums; }
-.burst.active { cursor: default; border-color: #ffd24a; background: rgba(255, 210, 74, .16); animation: glow 1.6s ease-in-out infinite alternate; }
-.burst.active .b-ic { background: #ffd24a; }
+.shopbtn.has { border-color: var(--gold); background: rgba(255, 210, 74, .16); animation: glow 1.6s ease-in-out infinite alternate; }
+.shopbtn.has .b-ic { background: var(--gold); }
 @keyframes glow { from { box-shadow: 0 0 0 rgba(255, 210, 74, 0); } to { box-shadow: 0 0 22px rgba(255, 210, 74, .45); } }
 
 #hint {
@@ -146,22 +142,40 @@ button { font: inherit; color: inherit; }
   .dock-foot { display: block; }
 }
 
-#adModal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(6, 5, 11, .86); }
-.ad-card { width: min(100%, 360px); display: grid; gap: 14px; padding: 22px; border-radius: 16px; background: var(--panel); border: 1px solid var(--violet); text-align: center; }
-.ad-card h3 { margin: 0; font-family: var(--f-display); font-weight: 500; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
-.ad-card p { margin: 0; color: var(--dim); line-height: 1.5; }
-#adCount { font-family: var(--f-display); font-weight: 700; font-size: 44px; color: var(--hot); font-variant-numeric: tabular-nums; }
-#adBar { display: block; height: 100%; width: 0; background: var(--violet); transition: width 1s linear; }
-.ad-cancel { padding: 10px 14px; border-radius: 10px; background: transparent; border: 1px solid var(--line); cursor: pointer; }
-.ad-cancel:hover { border-color: var(--dim); }
+#shop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(6, 5, 11, .88); }
+.shop-panel { width: min(100%, 760px); max-height: 100%; overflow-y: auto; display: grid; gap: 12px; align-content: start; padding: 18px 16px; border-radius: 16px; background: var(--panel); border: 1px solid var(--violet); }
+.shop-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.shop-head h2 { margin: 0; font-family: var(--f-display); font-weight: 500; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
+.shop-note { margin: 0; color: var(--dim); font-size: 12.5px; line-height: 1.5; }
+.shop-test { margin: 0; padding: 8px 10px; border: 1px solid var(--warn); border-radius: 10px; color: var(--warn); font-size: 12px; line-height: 1.45; }
+.shop-msg { margin: 0; min-height: 1.4em; color: var(--hot); font-size: 12.5px; }
+#shopList { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.bcard { display: grid; gap: 8px; align-content: start; padding: 12px; border-radius: 12px; background: var(--deep); border: 1px solid var(--line); }
+.bcard.on { border-color: var(--gold); }
+.bname { font-family: var(--f-display); font-weight: 500; font-size: 12px; }
+.bwhat { color: var(--dim); font-size: 12px; }
+.bstat { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; min-height: 1.4em; }
+.bcard.on .bstat { color: var(--gold); }
+.bhint { color: var(--warn); font-size: 11px; line-height: 1.35; }
+.packs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pack { display: grid; gap: 1px; padding: 8px 10px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); cursor: pointer; text-align: left; }
+.pack:hover:not(:disabled) { border-color: var(--ember); }
+.pack:disabled { opacity: .4; cursor: not-allowed; }
+.pack b { font-family: var(--f-display); font-weight: 500; font-size: 14px; color: var(--hot); }
+.pack span { font-size: 11px; color: var(--dim); }
+#shopConfirm { display: grid; gap: 12px; }
+.confirm-line { font-family: var(--f-display); font-weight: 500; font-size: 15px; line-height: 1.4; }
+.confirm-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn { padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.btn:hover { border-color: var(--dim); }
+.btn.primary { background: var(--ember); border-color: var(--ember); color: var(--void); font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   .pop { animation-duration: .6s; }
-  .burst.active { animation: none; }
+  .shopbtn.has { animation: none; }
 }
-</style>
-</head>
-<body>
+</style><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
+
 <div id="app">
   <main id="stage">
     <canvas id="c" tabindex="0" aria-label="Black hole. Drag to move it, or use the arrow keys."></canvas>
@@ -191,9 +205,9 @@ button { font: inherit; color: inherit; }
     <div id="hint">Drag to move the black hole. It eats whatever it catches.</div>
     <div id="toast" role="status" aria-live="polite"></div>
 
-    <button class="burst" id="burstBtn" type="button">
-      <span class="b-ic" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M0 0l12 6-12 6z"/></svg></span>
-      <span class="b-txt"><span class="b-title">Supernova Burst</span><span class="b-sub" id="burstSub">Watch an ad: reach x2 for 3 min</span></span>
+    <button class="shopbtn" id="shopBtn" type="button">
+      <span class="b-ic" aria-hidden="true">$</span>
+      <span class="b-txt"><span class="b-title">Boost Shop</span><span class="b-sub" id="shopSub">25% boosts from $3</span></span>
     </button>
   </main>
 
@@ -204,13 +218,26 @@ button { font: inherit; color: inherit; }
   </aside>
 </div>
 
-<div id="adModal" hidden role="dialog" aria-modal="true" aria-labelledby="adTitle">
-  <div class="ad-card">
-    <h3 id="adTitle">Sponsor break</h3>
-    <div id="adCount">5</div>
-    <div class="bar"><i id="adBar"></i></div>
-    <p>Your Supernova Burst starts when this ends.</p>
-    <button class="ad-cancel" id="adCancel" type="button">Cancel</button>
+<div id="shop" hidden role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+  <div class="shop-panel">
+    <div class="shop-head">
+      <h2 id="shopTitle">Boost Shop</h2>
+      <button class="icon-btn" id="shopClose" type="button" aria-label="Close shop">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p class="shop-test" id="shopTest" hidden>Test mode: boosts are free and nothing is charged. Before you launch, set CFG.testMode to false and connect a payment provider.</p>
+    <p class="shop-note">Each boost adds 25% to one ability. Boost time counts down only while you are playing, and a permanent boost never runs out.</p>
+    <p class="shop-msg" id="shopMsg"></p>
+    <div id="shopList"></div>
+    <div id="shopConfirm" hidden>
+      <div class="confirm-line" id="confirmLine"></div>
+      <p class="shop-note" id="confirmNote"></p>
+      <div class="confirm-row">
+        <button class="btn primary" id="confirmBuy" type="button">Buy</button>
+        <button class="btn" id="confirmBack" type="button">Back</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -218,23 +245,6 @@ button { font: inherit; color: inherit; }
 (() => {
 'use strict';
 
-/* ---------- Tuning (change these to rebalance the game) ---------- */
-const CFG = {
-  tierBase: 150,        // mass needed to reach tier 2 (Paper scraps)
-  tierRatio: 2.7,       // each tier needs 2.7x the mass of the one before
-  valueRatio: 1.7,      // each tier's debris is worth 1.7x the previous tier
-  costGrowth: 1.3,      // Cost = Base Cost x 1.3 ^ Quantity Owned
-  spawnRate: 0.8,       // debris per second before upgrades
-  floors: [4, 7, 10, 13], // tier indexes that lock in once reached (Cars, City blocks, Moons, Solar systems)
-  burstMs: 3 * 60 * 1000,
-  adSeconds: 5,
-  offlineCapHours: 3,   // most time that counts while you are away
-  offlineEff: 0.25,     // share of your recent rate earned while away
-  saveKey: 'blackHoleVacuum.v2'
-};
-
-const TIERS = [
-  { key: 'dust',     name: 'Dust motes',      spark: '#c8b79a' },
   { key: 'scrap',    name: 'Paper scraps',    spark: '#ece5d3' },
   { key: 'clip',     name: 'Paperclips',      spark: '#c9d1dc' },
   { key: 'coin',     name: 'Coins',           spark: '#e6b84a' },
@@ -263,19 +273,38 @@ const UPG = [
   { id: 'yield',   name: 'Mass Yield',    base: 400, max: 40, eff: n => 'Debris mass x' + (1 + 0.15 * n).toFixed(2) }
 ];
 
+/* One 25% boost per upgrade. The id matches the upgrade it boosts. */
+const BOOSTS = [
+  { id: 'hole',  name: 'Hole Boost',   what: 'Hole size +25%' },
+  { id: 'pull',  name: 'Pull Boost',   what: 'Gravity pull +25%' },
+  { id: 'hor',   name: 'Reach Boost',  what: 'Event Horizon reach +25%' },
+  { id: 'auto',  name: 'Auto Boost',   what: 'Auto-Vacuum pulses 25% faster' },
+  { id: 'field', name: 'Spawn Boost',  what: 'Debris spawn rate +25%' },
+  { id: 'yield', name: 'Yield Boost',  what: 'Mass per debris +25%' }
+];
+const PACKS = [
+  { key: 'm10',  price: 3,   minutes: 10 },
+  { key: 'm30',  price: 10,  minutes: 30 },
+  { key: 'm100', price: 30,  minutes: 100 },
+  { key: 'perm', price: 100, perm: true }
+];
+
 const TAU = Math.PI * 2;
 const $ = id => document.getElementById(id);
 const REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- State ---------- */
-const S = { mass: 0, floor: 0, own: { hole: 0, pull: 0, hor: 0, auto: 0, field: 0, yield: 0 }, burstEnd: 0, sound: true, rate: 0, t: 0 };
+const S = { mass: 0, floor: 0, own: { hole: 0, pull: 0, hor: 0, auto: 0, field: 0, yield: 0 }, boosts: {}, sound: true, rate: 0, t: 0 };
+for (const b of BOOSTS) S.boosts[b.id] = { left: 0, perm: false };
 
 const cost = (u, n) => Math.ceil(u.base * Math.pow(CFG.costGrowth, n));
 function tierOfMass(m) { let k = 0; for (let i = 0; i < TIERS.length; i++) if (m >= tierAt(i)) k = i; return k; }
 const tierFor = m => Math.max(S.floor, tierOfMass(m));
 const effTier = () => tierFor(S.mass);
-const yieldMul = () => 1 + 0.15 * S.own.yield;
-const burstActive = () => Date.now() < S.burstEnd;
+const boostOn = id => { const b = S.boosts[id]; return b.perm || b.left > 0; };
+const bm = id => (boostOn(id) ? 1 + CFG.boostPct : 1);
+const anyBoost = () => BOOSTS.some(b => boostOn(b.id));
+const yieldMul = () => (1 + 0.15 * S.own.yield) * bm('yield');
 
 const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
 function fmt(n, int) {
@@ -286,12 +315,18 @@ function fmt(n, int) {
   const v = n / Math.pow(1000, e);
   return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : String(Math.floor(v))) + SUF[e];
 }
+function mmss(sec) {
+  const s = Math.ceil(sec), m = Math.floor(s / 60);
+  return m + ':' + String(s % 60).padStart(2, '0');
+}
 
 /* ---------- Save / load (localStorage, no accounts) ---------- */
 function save() {
   try {
     S.t = Date.now();
-    localStorage.setItem(CFG.saveKey, JSON.stringify({ v: 2, mass: S.mass, floor: S.floor, own: S.own, burstEnd: S.burstEnd, sound: S.sound, rate: rate, t: S.t }));
+    const boosts = {};
+    for (const b of BOOSTS) boosts[b.id] = { left: Math.round(S.boosts[b.id].left), perm: S.boosts[b.id].perm };
+    localStorage.setItem(CFG.saveKey, JSON.stringify({ v: 2, mass: S.mass, floor: S.floor, own: S.own, boosts: boosts, sound: S.sound, rate: rate, t: S.t }));
   } catch (e) { /* storage unavailable: the game still runs, it just will not persist */ }
 }
 function load() {
@@ -304,7 +339,8 @@ function load() {
     S.mass = num(d.mass);
     S.floor = Math.min(TOP, Math.floor(num(d.floor)));
     for (const u of UPG) S.own[u.id] = Math.min(u.max, Math.floor(num(d.own && d.own[u.id])));
-    S.burstEnd = num(d.burstEnd); S.sound = d.sound !== false; S.rate = num(d.rate); S.t = num(d.t);
+    for (const b of BOOSTS) { const sb = d.boosts && d.boosts[b.id]; if (sb) { S.boosts[b.id].left = num(sb.left); S.boosts[b.id].perm = sb.perm === true; } }
+    S.sound = d.sound !== false; S.rate = num(d.rate); S.t = num(d.t);
   } catch (e) { /* ignore corrupt saves */ }
 }
 
@@ -358,7 +394,6 @@ function sndCrunch(m) {
 function sndBuy() { tone('triangle', 520, 800, 0.12, 0.18); }
 function sndUp() { [440, 554, 659, 880].forEach((f, i) => tone('triangle', f, f, 0.2, 0.2, i * 0.09)); }
 function sndDrop() { tone('sawtooth', 240, 60, 0.35, 0.18); noise(0.25, 0.12, 400, 0.8); }
-function sndBurst() { tone('sawtooth', 60, 1200, 1.2, 0.2); noise(1.2, 0.2, 800, 0.6); }
 
 /* ---------- Canvas ---------- */
 const stage = $('stage'), cv = $('c'), ctx = cv.getContext('2d', { alpha: false });
@@ -398,9 +433,9 @@ let holeR = 13, holeGlow = 0, flash = 0, shakeMag = 0, T = 0, ringId = 0, lastTi
 const items = [], rings = [], sparks = [], swirl = [];
 let spawnAcc = 0, autoAcc = 0, pressed = false;
 
-const targetHoleR = () => (22 + 3 * S.own.hole) * sc;
+const targetHoleR = () => (22 + 3 * S.own.hole) * sc * bm('hole');
 function reachNow() {
-  const base = (0.15 * Math.min(W, H) + 2 * holeR) * (1 + 0.12 * S.own.hor) * (burstActive() ? 2 : 1);
+  const base = (0.15 * Math.min(W, H) + 2 * holeR) * (1 + 0.12 * S.own.hor) * bm('hor');
   return Math.min(base, Math.hypot(W, H) * 0.6);
 }
 function syncSwirl() {
@@ -430,7 +465,7 @@ function spawnItem(init) {
 }
 function firePulse(auto) {
   if (rings.length > 10) rings.shift();
-  rings.push({ id: ++ringId, r: holeR * 1.1, max: reachNow() * 1.2, speed: 1000 * U, auto: !!auto, gold: burstActive() });
+  rings.push({ id: ++ringId, r: holeR * 1.1, max: reachNow() * 1.2, speed: 1000 * U, auto: !!auto, gold: anyBoost() });
 }
 
 /* ---------- Popups & toast ---------- */
@@ -473,67 +508,6 @@ function absorb(it) {
   if (T - lastPop > 0.07) {
     lastPop = T;
     popup(hx + (Math.random() - 0.5) * holeR * 3, hy - holeR * 1.6 - Math.random() * 20, '+' + fmt(v));
-  }
-}
-
-/* ---------- Input: drag the hole ---------- */
-function setTarget(e) {
-  const r = cv.getBoundingClientRect();
-  tx = Math.max(0, Math.min(W, e.clientX - r.left)); ty = Math.max(0, Math.min(H, e.clientY - r.top));
-  $('hint').classList.add('gone');
-}
-cv.addEventListener('pointerdown', e => {
-  e.preventDefault(); initAudio(); pressed = true;
-  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* not supported */ }
-  setTarget(e);
-});
-cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || pressed) setTarget(e); });
-const release = () => { pressed = false; };
-cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
-cv.addEventListener('contextmenu', e => e.preventDefault());
-cv.addEventListener('keydown', e => {
-  const d = 40 * U, k = e.key;
-  if (k === 'ArrowLeft') tx = Math.max(0, tx - d); else if (k === 'ArrowRight') tx = Math.min(W, tx + d);
-  else if (k === 'ArrowUp') ty = Math.max(0, ty - d); else if (k === 'ArrowDown') ty = Math.min(H, ty + d);
-  else return;
-  e.preventDefault(); initAudio(); $('hint').classList.add('gone');
-});
-document.addEventListener('pointerdown', initAudio, { once: true });
-
-/* ---------- Upgrades UI ---------- */
-const upEls = {};
-function buildUpgrades() {
-  const ul = $('upgrades');
-  for (const u of UPG) {
-    const li = document.createElement('li');
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'up';
-    b.innerHTML = '<span class="up-name"></span><span class="up-eff"></span><span class="up-warn"></span><span class="up-row"><span class="up-own"></span><span class="up-cost"></span></span>';
-    b.querySelector('.up-name').textContent = u.name;
-    b.addEventListener('click', () => buy(u.id));
-    li.appendChild(b); ul.appendChild(li);
-    upEls[u.id] = { b, eff: b.querySelector('.up-eff'), warn: b.querySelector('.up-warn'), own: b.querySelector('.up-own'), cost: b.querySelector('.up-cost') };
-  }
-}
-function buy(id) {
-  const u = UPG.find(x => x.id === id), n = S.own[id];
-  if (n >= u.max) return;
-  const c = cost(u, n);
-  if (S.mass < c) return;
-  S.mass -= c; S.own[id] = n + 1;
-  sndBuy(); shake(2); holeGlow = Math.min(1.5, holeGlow + 0.6);
-  if (id === 'hole') syncSwirl();
-  save(); updateHud(true);
-}
-
-/* ---------- HUD ---------- */
-const el = { mass: $('massVal'), rate: $('rate'), tier: $('tierName'), floor: $('floorTxt'), bar: $('tierBar'), next: $('nextTxt'), burst: $('burstBtn'), burstSub: $('burstSub') };
-const cache = {};
-function setText(node, key, val) { if (cache[key] !== val) { cache[key] = val; node.textContent = val; } }
-function updateHud(force) {
-  if (force) for (const k in cache) delete cache[k];
-  const et = effTier();
-  setText(el.mass, 'mass', fmt(S.mass, true));
   setText(el.rate, 'rate', fmt(rate) + '/s');
   setText(el.tier, 'tier', TIERS[et].name);
   setText(el.floor, 'floor', S.floor > 0 ? 'Floor: ' + TIERS[S.floor].name : '');
@@ -545,7 +519,7 @@ function updateHud(force) {
   setText(el.next, 'next', et >= TOP ? 'Top tier reached' : held ? 'Held by floor. Reach ' + fmt(lo, true) + ' to earn it back.' : 'Next: ' + TIERS[et + 1].name + ' at ' + fmt(hi, true));
   for (const u of UPG) {
     const e = upEls[u.id], n = S.own[u.id], maxed = n >= u.max, c = cost(u, n);
-    setText(e.eff, u.id + 'e', u.eff(n));
+    setText(e.eff, u.id + 'e', u.eff(n) + (boostOn(u.id) ? ' · +25% boost' : ''));
     setText(e.own, u.id + 'o', maxed ? 'Maxed' : 'Owned ' + n);
     setText(e.cost, u.id + 'c', maxed ? 'MAX' : fmt(c, true));
     const can = !maxed && S.mass >= c;
@@ -553,48 +527,91 @@ function updateHud(force) {
     setText(e.warn, u.id + 'w', can && after < et ? 'Drops you to ' + TIERS[after].name : '');
     e.b.disabled = !can; e.b.classList.toggle('can', can);
   }
-  const rem = S.burstEnd - Date.now();
-  if (rem > 0) {
-    const s = Math.ceil(rem / 1000), t = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-    setText(el.burstSub, 'bs', 'Reach x2 · ' + t + ' left');
-    el.burst.classList.add('active');
-  } else {
-    setText(el.burstSub, 'bs', 'Watch an ad: reach x2 for 3 min');
-    el.burst.classList.remove('active');
+  const nb = BOOSTS.filter(b => boostOn(b.id)).length;
+  setText(el.shopSub, 'ss', nb ? nb + (nb === 1 ? ' boost active' : ' boosts active') : '25% boosts from $3');
+  el.shopBtn.classList.toggle('has', nb > 0);
+}
+
+/* ---------- Boost shop ---------- */
+/* PAYMENT HOOK: replace requestPayment with your payment provider's checkout (Stripe Checkout, Apple or Google
+   in-app purchase, or your platform's payments). Call done(true) only after the provider confirms the payment.
+   Have your server record each purchase and re-check it, because anything saved in the browser can be edited by the player.
+   Until then this fails closed: with CFG.testMode off, no boost is granted. */
+function requestPayment(product, done) { done(false); }
+
+function grant(id, pk) {
+  const b = S.boosts[id], bd = BOOSTS.find(x => x.id === id);
+  if (!b || !bd || b.perm) return false;
+  if (pk.perm) { b.perm = true; b.left = 0; } else { b.left += pk.minutes * 60; }
+  sndUp(); shake(6); holeGlow = 1.5; if (!REDUCE) flash = 0.4;
+  const msg = bd.name + (pk.perm ? ' is now permanent' : ': +' + pk.minutes + ' minutes');
+  toast(msg); shopSay(msg);
+  save(); updateHud(true); refreshShop();
+  return true;
+}
+function startPurchase(id, key, done) {
+  const pk = PACKS.find(p => p.key === key), bd = BOOSTS.find(b => b.id === id);
+  if (!pk || !bd) { done(false); return; }
+  const product = { sku: 'boost_' + id + '_' + key, boost: id, price: pk.price, minutes: pk.minutes || 0, permanent: !!pk.perm };
+  if (CFG.testMode) { done(grant(id, pk)); return; }
+  requestPayment(product, ok => { done(ok ? grant(id, pk) : false); });
+}
+
+const shopEl = $('shop'), listEl = $('shopList'), confEl = $('shopConfirm'), msgEl = $('shopMsg');
+const shopRefs = {}; let pending = null, msgT = 0;
+function shopSay(text) { msgEl.textContent = text; clearTimeout(msgT); msgT = setTimeout(() => { msgEl.textContent = ''; }, 4500); }
+function buildShop() {
+  for (const bd of BOOSTS) {
+    const card = document.createElement('div'); card.className = 'bcard';
+    card.innerHTML = '<span class="bname"></span><span class="bwhat"></span><span class="bstat"></span><span class="bhint"></span><div class="packs"></div>';
+    card.querySelector('.bname').textContent = bd.name;
+    card.querySelector('.bwhat').textContent = bd.what;
+    const packs = card.querySelector('.packs'), btns = {};
+    for (const pk of PACKS) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pack';
+      b.innerHTML = '<b></b><span></span>';
+      b.querySelector('b').textContent = '$' + pk.price;
+      b.querySelector('span').textContent = pk.perm ? 'Permanent' : pk.minutes + ' min';
+      b.addEventListener('click', () => openConfirm(bd.id, pk.key));
+      packs.appendChild(b); btns[pk.key] = b;
+    }
+    listEl.appendChild(card);
+    shopRefs[bd.id] = { card, stat: card.querySelector('.bstat'), hint: card.querySelector('.bhint'), btns };
+  }
+  $('shopTest').hidden = !CFG.testMode;
+}
+function refreshShop() {
+  for (const bd of BOOSTS) {
+    const r = shopRefs[bd.id], b = S.boosts[bd.id], on = boostOn(bd.id);
+    r.card.classList.toggle('on', on);
+    r.stat.textContent = b.perm ? 'Permanent boost active' : b.left > 0 ? 'Active · ' + mmss(b.left) + ' left' : 'Not active';
+    r.hint.textContent = bd.id === 'auto' && S.own.auto === 0 ? 'Needs Auto-Vacuum level 1 to do anything.' : '';
+    for (const pk of PACKS) r.btns[pk.key].disabled = b.perm;
   }
 }
-
-/* ---------- Rewarded ad (placeholder) ---------- */
-const adModal = $('adModal'); let adTimer = 0;
-/* AD HOOK: replace the body of showRewardedAd with your ad SDK's rewarded-ad call.
-   Call onReward() only after the SDK reports the ad was watched to the end. */
-function showRewardedAd(onReward) {
-  let left = CFG.adSeconds;
-  $('adCount').textContent = left;
-  const bar = $('adBar'); bar.style.transition = 'none'; bar.style.width = '0%';
-  adModal.hidden = false;
-  requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = 'width 1s linear'; bar.style.width = (100 / CFG.adSeconds) + '%'; }));
-  $('adCancel').focus();
-  clearInterval(adTimer);
-  adTimer = setInterval(() => {
-    left--;
-    $('adCount').textContent = Math.max(0, left);
-    bar.style.width = (((CFG.adSeconds - left) / CFG.adSeconds) * 100) + '%';
-    if (left <= 0) { clearInterval(adTimer); adModal.hidden = true; onReward(); }
-  }, 1000);
+function openShop() { shopEl.hidden = false; backToList(); $('shopClose').focus(); }
+function closeShop() { shopEl.hidden = true; pending = null; el.shopBtn.focus(); }
+function backToList() { pending = null; confEl.hidden = true; listEl.hidden = false; refreshShop(); }
+function openConfirm(id, key) {
+  const bd = BOOSTS.find(b => b.id === id), pk = PACKS.find(p => p.key === key);
+  pending = { id, key };
+  $('confirmLine').textContent = bd.name + ' · ' + (pk.perm ? 'Permanent' : pk.minutes + ' minutes') + ' · $' + pk.price;
+  $('confirmNote').textContent = CFG.testMode ? 'Test mode: this is free and nothing is charged.' : 'You will pay $' + pk.price + ' through our checkout.';
+  $('confirmBuy').textContent = CFG.testMode ? 'Get test boost' : 'Pay $' + pk.price;
+  listEl.hidden = true; confEl.hidden = false; $('confirmBuy').focus();
 }
-function closeAd() { clearInterval(adTimer); adModal.hidden = true; }
-$('adCancel').addEventListener('click', closeAd);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !adModal.hidden) closeAd(); });
-
-function activateBurst() {
-  S.burstEnd = Date.now() + CFG.burstMs;
-  sndBurst(); shake(14); if (!REDUCE) flash = 0.8; holeGlow = 1.5;
-  rings.push({ id: ++ringId, r: holeR, max: Math.hypot(W, H), speed: 1600 * U, auto: false, gold: true });
-  toast('Supernova Burst: reach doubled for 3 minutes');
-  save(); updateHud(true);
-}
-el.burst.addEventListener('click', () => { initAudio(); if (!burstActive()) showRewardedAd(activateBurst); });
+$('shopBtn').addEventListener('click', () => { initAudio(); openShop(); });
+$('shopClose').addEventListener('click', closeShop);
+$('confirmBack').addEventListener('click', backToList);
+$('confirmBuy').addEventListener('click', () => {
+  if (!pending) return;
+  const p = pending;
+  startPurchase(p.id, p.key, ok => { if (ok) backToList(); else shopSay('Payment did not go through. You were not charged.'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || shopEl.hidden) return;
+  if (!confEl.hidden) backToList(); else closeShop();
+});
 
 /* ---------- Sound toggle & reset ---------- */
 const sndBtn = $('sndBtn');
@@ -603,12 +620,12 @@ sndBtn.addEventListener('click', () => { initAudio(); S.sound = !S.sound; syncSo
 const resetBtn = $('resetBtn'); let armed = false, armT = 0;
 resetBtn.addEventListener('click', () => {
   if (!armed) {
-    armed = true; resetBtn.classList.add('armed'); toast('Tap reset again to erase all progress', true);
+    armed = true; resetBtn.classList.add('armed'); toast('Tap reset again to erase progress. Purchased boosts are kept.', true);
     armT = setTimeout(() => { armed = false; resetBtn.classList.remove('armed'); }, 3500);
     return;
   }
   clearTimeout(armT); armed = false; resetBtn.classList.remove('armed');
-  S.mass = 0; S.floor = 0; S.burstEnd = 0; S.t = 0; rate = 0; gained = 0;
+  S.mass = 0; S.floor = 0; S.t = 0; rate = 0; gained = 0;
   for (const u of UPG) S.own[u.id] = 0;
   items.length = 0; rings.length = 0; sparks.length = 0;
   holeR = targetHoleR(); syncSwirl(); lastTier = 0;
@@ -652,37 +669,14 @@ function update(dt) {
   flash = Math.max(0, flash - dt * 1.6);
   shakeMag *= Math.exp(-9 * dt);
 
-  const R = reachNow(), Gp = 1 + 0.2 * S.own.pull, burst = burstActive();
-  spawnAcc += dt * CFG.spawnRate * (1 + 0.15 * S.own.field);
-  while (spawnAcc >= 1) { spawnAcc -= 1; if (items.length < 70) spawnItem(false); }
-  if (S.own.auto > 0) { autoAcc += dt; if (autoAcc >= 9 / (1 + 0.3 * S.own.auto)) { autoAcc = 0; firePulse(true); sndPulse(); } }
-
-  for (let i = rings.length - 1; i >= 0; i--) {
-    const g = rings[i]; g.r += g.speed * dt;
-    for (const it of items) {
-      if (it.ring === g.id) continue;
-      if (Math.hypot(it.x - hx, it.y - hy) <= g.r) { it.ring = g.id; it.pullUntil = T + 2.2; }
-    }
-    if (g.r > g.max + 30) rings.splice(i, 1);
-  }
-
-  const lim = Math.hypot(W, H);
-  for (let i = items.length - 1; i >= 0; i--) {
-    const it = items[i]; it.age += dt;
-    const dx = hx - it.x, dy = hy - it.y, d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
-    const near = d < R ? 260 * U * Math.pow(1 - d / R, 1.5) : 0, far = 150 * U / (d / U + 250);
-    const a = Gp * (near + far);
-    it.vx += nx * a * dt; it.vy += ny * a * dt;
-    let damp = 0.15;
-    if (T < it.pullUntil) { it.vx += (nx * 700 * U - ny * 120 * U) * dt; it.vy += (ny * 700 * U + nx * 120 * U) * dt; damp = 1.6; }
-    const f = Math.exp(-damp * dt); it.vx *= f; it.vy *= f;
-    it.x += it.vx * dt; it.y += it.vy * dt; it.rot += it.vr * dt;
+  for (const bd of BOOSTS) {
+    const b = S.boosts[bd.id];
     if (d < holeR * 0.85) { absorb(it); items.splice(i, 1); continue; }
     if (it.age > 30 || it.x < -160 || it.x > W + 160 || it.y < -160 || it.y > H + 160 || d > lim) items.splice(i, 1);
   }
 
   for (const p of swirl) {
-    const boost = (rings.length ? 1.8 : 1) * (burst ? 1.5 : 1);
+    const boost = (rings.length ? 1.8 : 1) * (boosted ? 1.3 : 1);
     const w = 2.2 / Math.pow(p.r, 1.3) * boost;
     p.a += w * dt; p.r -= dt * 0.04 * boost;
     if (p.r < 1.05) { p.r = 3.4; p.a = Math.random() * TAU; }
@@ -705,19 +699,19 @@ function update(dt) {
 
 /* ---------- Draw ---------- */
 function draw() {
-  const burst = burstActive();
+  const boosted = anyBoost();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   ctx.fillStyle = '#06050b'; ctx.fillRect(0, 0, W, H);
   if (bg) ctx.drawImage(bg, 0, 0, W, H);
 
   ctx.globalCompositeOperation = 'lighter';
-  const gc = burst ? '255,210,90' : '255,138,61';
+  const gc = boosted ? '255,210,90' : '255,138,61';
   const gr = ctx.createRadialGradient(hx, hy, holeR * 0.9, hx, hy, holeR * (4.2 + holeGlow * 0.5));
   gr.addColorStop(0, 'rgba(' + gc + ',' + (0.28 + holeGlow * 0.12) + ')'); gr.addColorStop(0.4, 'rgba(138,107,255,.10)'); gr.addColorStop(1, 'rgba(138,107,255,0)');
   ctx.fillStyle = gr; ctx.fillRect(hx - holeR * 5.5, hy - holeR * 5.5, holeR * 11, holeR * 11);
 
-  const pal = burst ? ['#ffffff', '#ffd24a', '#ff6a3d'] : ['#ffe2b8', '#ff8a3d', '#8a6bff'];
+  const pal = boosted ? ['#ffffff', '#ffd24a', '#ff6a3d'] : ['#ffe2b8', '#ff8a3d', '#8a6bff'];
   ctx.lineCap = 'round'; ctx.globalAlpha = 0.6;
   for (const p of swirl) {
     const t = (p.r - 1) / 2.6, w = 2.2 / Math.pow(p.r, 1.3);
@@ -744,9 +738,9 @@ function draw() {
   ctx.globalAlpha = 1;
 
   ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(hx, hy, holeR, 0, TAU); ctx.fill();
-  ctx.lineWidth = 2 + holeGlow * 2; ctx.strokeStyle = burst ? '#fff1b8' : '#ffd9a8'; ctx.globalAlpha = 0.75 + Math.min(0.25, holeGlow * 0.3);
+  ctx.lineWidth = 2 + holeGlow * 2; ctx.strokeStyle = boosted ? '#fff1b8' : '#ffd9a8'; ctx.globalAlpha = 0.75 + Math.min(0.25, holeGlow * 0.3);
   ctx.beginPath(); ctx.arc(hx, hy, holeR * 1.04, 0, TAU); ctx.stroke();
-  ctx.lineWidth = 1; ctx.strokeStyle = burst ? '#ffd24a' : '#ff8a3d'; ctx.globalAlpha = 0.3;
+  ctx.lineWidth = 1; ctx.strokeStyle = boosted ? '#ffd24a' : '#ff8a3d'; ctx.globalAlpha = 0.3;
   ctx.beginPath(); ctx.arc(hx, hy, holeR * 1.22, 0, TAU); ctx.stroke();
   ctx.globalAlpha = 1;
 
@@ -776,7 +770,7 @@ function frame(ts) {
 load();
 rate = S.rate;
 updateFloor(true);
-buildUpgrades(); syncSound(); resize();
+buildUpgrades(); buildShop(); syncSound(); resize();
 holeR = targetHoleR(); syncSwirl();
 for (let i = 0; i < 8; i++) spawnItem(true);
 lastTier = effTier();
@@ -791,6 +785,7 @@ if (S.t > 0) {
 if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
 setInterval(() => { rate += (gained / 0.25 - rate) * 0.03; gained = 0; }, 250);
 setInterval(() => updateHud(false), 100);
+setInterval(() => { if (!shopEl.hidden && !listEl.hidden) refreshShop(); }, 500);
 setInterval(save, 4000);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 window.addEventListener('pagehide', save);
@@ -798,5 +793,4 @@ updateHud(true);
 requestAnimationFrame(frame);
 })();
 </script>
-</body>
-</html>
+</body></html>
