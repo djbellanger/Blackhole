@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Black Hole Vacuum</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
 <style>
@@ -20,7 +20,7 @@
   --f-display: 'Unbounded', system-ui, sans-serif;
   --f-data: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
 }
-html, body { height: 100%; }
+html, body { height: 100%; min-height: 100vh; }
 body {
   margin: 0;
   background: var(--void);
@@ -36,9 +36,9 @@ button { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
 
-#app { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+#app { height: 100vh; height: 100dvh; min-height: 420px; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
 #stage { position: relative; overflow: hidden; background: var(--void); min-height: 0; }
-#c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; -webkit-touch-callout: none; outline-offset: -4px; }
+#c { position: absolute; left: 0; top: 0; width: 100%; height: 100%; min-height: 200px; display: block; touch-action: none; cursor: grab; -webkit-touch-callout: none; outline-offset: -4px; }
 #c:active { cursor: grabbing; }
 
 .hud {
@@ -174,7 +174,7 @@ button { font: inherit; color: inherit; }
   .pop { animation-duration: .6s; }
   .shopbtn.has { animation: none; }
 }
-</style><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
+</style>
 
 <div id="app">
   <main id="stage">
@@ -242,9 +242,27 @@ button { font: inherit; color: inherit; }
 </div>
 
 <script>
+window.addEventListener('error',function(e){try{var d=document.createElement('div');d.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:99;background:#400;color:#fff;font:12px monospace;padding:8px;border-radius:8px';d.textContent='Game error: '+e.message+' (line '+e.lineno+')';document.body.appendChild(d);}catch(_){}});
 (() => {
 'use strict';
 
+/* ---------- Tuning (change these to rebalance the game) ---------- */
+const CFG = {
+  tierBase: 150,        // mass needed to reach tier 2 (Paper scraps)
+  tierRatio: 2.7,       // each tier needs 2.7x the mass of the one before
+  valueRatio: 1.7,      // each tier's debris is worth 1.7x the previous tier
+  costGrowth: 1.3,      // Cost = Base Cost x 1.3 ^ Quantity Owned
+  spawnRate: 0.8,       // debris per second before upgrades
+  floors: [4, 7, 10, 13], // tier indexes that lock in once reached (Cars, City blocks, Moons, Solar systems)
+  boostPct: 0.25,       // every boost adds 25% to its ability
+  testMode: true,       // true = boosts are free (for testing). Set to false and connect payments before launch.
+  offlineCapHours: 3,   // most time that counts while you are away
+  offlineEff: 0.25,     // share of your recent rate earned while away
+  saveKey: 'blackHoleVacuum.v2'
+};
+
+const TIERS = [
+  { key: 'dust',     name: 'Dust motes',      spark: '#c8b79a' },
   { key: 'scrap',    name: 'Paper scraps',    spark: '#ece5d3' },
   { key: 'clip',     name: 'Paperclips',      spark: '#c9d1dc' },
   { key: 'coin',     name: 'Coins',           spark: '#e6b84a' },
@@ -418,7 +436,7 @@ let sized = false;
 function resize() {
   const r = stage.getBoundingClientRect();
   const oW = W, oH = H;
-  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  W = Math.max(200, r.width || window.innerWidth || 400); H = Math.max(200, r.height || window.innerHeight || 600);
   DPR = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
   U = Math.max(0.8, Math.min(2, Math.min(W, H) / 400));
@@ -508,6 +526,67 @@ function absorb(it) {
   if (T - lastPop > 0.07) {
     lastPop = T;
     popup(hx + (Math.random() - 0.5) * holeR * 3, hy - holeR * 1.6 - Math.random() * 20, '+' + fmt(v));
+  }
+}
+
+/* ---------- Input: drag the hole ---------- */
+function setTarget(e) {
+  const r = cv.getBoundingClientRect();
+  tx = Math.max(0, Math.min(W, e.clientX - r.left)); ty = Math.max(0, Math.min(H, e.clientY - r.top));
+  $('hint').classList.add('gone');
+}
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); initAudio(); pressed = true;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* not supported */ }
+  setTarget(e);
+});
+cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || pressed) setTarget(e); });
+const release = () => { pressed = false; };
+cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+cv.addEventListener('keydown', e => {
+  const d = 40 * U, k = e.key;
+  if (k === 'ArrowLeft') tx = Math.max(0, tx - d); else if (k === 'ArrowRight') tx = Math.min(W, tx + d);
+  else if (k === 'ArrowUp') ty = Math.max(0, ty - d); else if (k === 'ArrowDown') ty = Math.min(H, ty + d);
+  else return;
+  e.preventDefault(); initAudio(); $('hint').classList.add('gone');
+});
+document.addEventListener('pointerdown', initAudio, { once: true });
+
+/* ---------- Upgrades UI ---------- */
+const upEls = {};
+function buildUpgrades() {
+  const ul = $('upgrades');
+  for (const u of UPG) {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'up';
+    b.innerHTML = '<span class="up-name"></span><span class="up-eff"></span><span class="up-warn"></span><span class="up-row"><span class="up-own"></span><span class="up-cost"></span></span>';
+    b.querySelector('.up-name').textContent = u.name;
+    b.addEventListener('click', () => buy(u.id));
+    li.appendChild(b); ul.appendChild(li);
+    upEls[u.id] = { b, eff: b.querySelector('.up-eff'), warn: b.querySelector('.up-warn'), own: b.querySelector('.up-own'), cost: b.querySelector('.up-cost') };
+  }
+}
+function buy(id) {
+  const u = UPG.find(x => x.id === id), n = S.own[id];
+  if (n >= u.max) return;
+  const c = cost(u, n);
+  if (S.mass < c) return;
+  S.mass -= c; S.own[id] = n + 1;
+  sndBuy(); shake(2); holeGlow = Math.min(1.5, holeGlow + 0.6);
+  if (id === 'hole') syncSwirl();
+  save(); updateHud(true);
+}
+
+/* ---------- HUD ---------- */
+const el = { mass: $('massVal'), rate: $('rate'), tier: $('tierName'), floor: $('floorTxt'), bar: $('tierBar'), next: $('nextTxt'), shopBtn: $('shopBtn'), shopSub: $('shopSub') };
+const cache = {};
+function setText(node, key, val) { if (cache[key] !== val) { cache[key] = val; node.textContent = val; } }
+function updateHud(force) {
+  if (force) for (const k in cache) delete cache[k];
+  const et = effTier();
+  setText(el.mass, 'mass', fmt(S.mass, true));
   setText(el.rate, 'rate', fmt(rate) + '/s');
   setText(el.tier, 'tier', TIERS[et].name);
   setText(el.floor, 'floor', S.floor > 0 ? 'Floor: ' + TIERS[S.floor].name : '');
@@ -671,6 +750,34 @@ function update(dt) {
 
   for (const bd of BOOSTS) {
     const b = S.boosts[bd.id];
+    if (!b.perm && b.left > 0) { b.left = Math.max(0, b.left - dt); if (b.left === 0) { toast(bd.name + ' ran out'); updateHud(true); } }
+  }
+
+  const R = reachNow(), Gp = (1 + 0.2 * S.own.pull) * bm('pull'), boosted = anyBoost();
+  spawnAcc += dt * CFG.spawnRate * (1 + 0.15 * S.own.field) * bm('field');
+  while (spawnAcc >= 1) { spawnAcc -= 1; if (items.length < 70) spawnItem(false); }
+  if (S.own.auto > 0) { autoAcc += dt * bm('auto'); if (autoAcc >= 9 / (1 + 0.3 * S.own.auto)) { autoAcc = 0; firePulse(true); sndPulse(); } }
+
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const g = rings[i]; g.r += g.speed * dt;
+    for (const it of items) {
+      if (it.ring === g.id) continue;
+      if (Math.hypot(it.x - hx, it.y - hy) <= g.r) { it.ring = g.id; it.pullUntil = T + 2.2; }
+    }
+    if (g.r > g.max + 30) rings.splice(i, 1);
+  }
+
+  const lim = Math.hypot(W, H);
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i]; it.age += dt;
+    const dx = hx - it.x, dy = hy - it.y, d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
+    const near = d < R ? 260 * U * Math.pow(1 - d / R, 1.5) : 0, far = 150 * U / (d / U + 250);
+    const a = Gp * (near + far);
+    it.vx += nx * a * dt; it.vy += ny * a * dt;
+    let damp = 0.15;
+    if (T < it.pullUntil) { it.vx += (nx * 700 * U - ny * 120 * U) * dt; it.vy += (ny * 700 * U + nx * 120 * U) * dt; damp = 1.6; }
+    const f = Math.exp(-damp * dt); it.vx *= f; it.vy *= f;
+    it.x += it.vx * dt; it.y += it.vy * dt; it.rot += it.vr * dt;
     if (d < holeR * 0.85) { absorb(it); items.splice(i, 1); continue; }
     if (it.age > 30 || it.x < -160 || it.x > W + 160 || it.y < -160 || it.y > H + 160 || d > lim) items.splice(i, 1);
   }
@@ -793,4 +900,5 @@ updateHud(true);
 requestAnimationFrame(frame);
 })();
 </script>
+
 </body></html>
